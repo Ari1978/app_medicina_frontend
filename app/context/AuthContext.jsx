@@ -6,7 +6,8 @@ export const AuthContext = createContext(null);
 
 // ✅ API dinámico (Local + Producción)
 const API_URL =
-  process.env.NEXT_PUBLIC_API_URL 
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [role, setRole] = useState(null);
@@ -19,10 +20,10 @@ export function AuthProvider({ children }) {
     const checkSession = async () => {
       try {
         const endpoints = [
-          { url: `${API_URL}/empresa/me`, role: "empresa" },
-          { url: `${API_URL}/staff/auth/me`, role: "staff" },
-          { url: `${API_URL}/admin/auth/me`, role: "admin" },
-          { url: `${API_URL}/superadmin/auth/me`, role: "superadmin" },
+          { url: `${API_URL}/api/empresa/me`, role: "empresa" },
+          { url: `${API_URL}/api/staff/auth/me`, role: "staff" },
+          { url: `${API_URL}/api/admin/auth/me`, role: "admin" },
+          { url: `${API_URL}/api/superadmin/auth/me`, role: "superadmin" },
         ];
 
         for (const ep of endpoints) {
@@ -53,10 +54,10 @@ export function AuthProvider({ children }) {
   // ✅ LOGIN UNIFICADO (CON SOPORTE mustChangePassword)
   const login = async (role, credentials) => {
     const urls = {
-      empresa: `${API_URL}/empresa/login`,
-      staff: `${API_URL}/staff/auth/login`,
-      admin: `${API_URL}/admin/auth/login`,
-      superadmin: `${API_URL}/superadmin/auth/login`,
+      empresa: `${API_URL}/api/empresa/login`,
+      staff: `${API_URL}/api/staff/auth/login`,
+      admin: `${API_URL}/api/admin/auth/login`,
+      superadmin: `${API_URL}/api/superadmin/auth/login`,
     };
 
     try {
@@ -93,10 +94,10 @@ export function AuthProvider({ children }) {
   // ✅ LOGOUT UNIFICADO
   const logout = async () => {
     const urls = {
-      empresa: `${API_URL}/empresa/logout`,
-      staff: `${API_URL}/staff/auth/logout`,
-      admin: `${API_URL}/admin/auth/logout`,
-      superadmin: `${API_URL}/superadmin/auth/logout`,
+      empresa: `${API_URL}/api/empresa/logout`,
+      staff: `${API_URL}/api/staff/auth/logout`,
+      admin: `${API_URL}/api/admin/auth/logout`,
+      superadmin: `${API_URL}/api/superadmin/auth/logout`,
     };
 
     try {
