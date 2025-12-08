@@ -3,14 +3,19 @@
 import { useEffect, useState } from "react";
 import TurnosList from "../../components/EmpresaTurnosList";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
 export default function TurnosPage() {
   const [turnos, setTurnos] = useState([]);
 
   useEffect(() => {
-    fetch("http://localhost:4000/api/empresa/turnos", {
-      credentials: "include",
+    fetch(`${API_URL}/empresa/turnos`, {
+      credentials: "include", // ✅ cookies en local y producción
     })
-      .then((r) => r.json())
+      .then((r) => {
+        if (!r.ok) throw new Error("Error al cargar turnos");
+        return r.json();
+      })
       .then((data) => {
         console.log("TURNOS DEL BACK:", data);
 
@@ -19,10 +24,12 @@ export default function TurnosPage() {
 
         const normalizarFecha = (f) => {
           if (/^\d{4}-\d{2}-\d{2}$/.test(f)) return new Date(f);
+
           if (f.includes("/")) {
             const [d, m, y] = f.split("/");
             return new Date(`${y}-${m}-${d}`);
           }
+
           return new Date(f);
         };
 
@@ -30,7 +37,7 @@ export default function TurnosPage() {
           const fechaTurno = normalizarFecha(t.fecha);
           if (isNaN(fechaTurno)) return false;
 
-          // Mostrar turnos con fecha >= HOY (sean provisionales o confirmados)
+          // ✅ Mostrar turnos con fecha >= HOY
           return fechaTurno >= hoy;
         });
 

@@ -1,47 +1,86 @@
-
 "use client";
 
 import { useEffect, useState } from "react";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
 export default function TurnosRecepcion() {
   const [turnos, setTurnos] = useState([]);
   const [busqueda, setBusqueda] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  // ✅ cargar turnos del día
+  // ✅ cargar turnos del día (local + prod)
   useEffect(() => {
-    fetch("http://localhost:4000/api/recepcion/turnos-hoy", {
-      credentials: "include",
-    })
-      .then((res) => res.json())
-      .then((data) => setTurnos(data));
+    const cargarHoy = async () => {
+      try {
+        setLoading(true);
+
+        const res = await fetch(`${API_URL}/recepcion/turnos-hoy`, {
+          credentials: "include",
+        });
+
+        if (!res.ok) throw new Error("Error cargando turnos");
+
+        const data = await res.json();
+        setTurnos(Array.isArray(data) ? data : []);
+      } catch (err) {
+        console.error("Error cargando turnos del día:", err);
+        setTurnos([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    cargarHoy();
   }, []);
 
-  // ✅ buscador
+  // ✅ buscador (local + prod)
   useEffect(() => {
     if (!busqueda) return;
 
-    fetch(
-      `http://localhost:4000/api/recepcion/buscar?query=${busqueda}`,
-      { credentials: "include" }
-    )
-      .then((res) => res.json())
-      .then((data) => setTurnos(data));
+    const buscar = async () => {
+      try {
+        const res = await fetch(
+          `${API_URL}/recepcion/buscar?query=${encodeURIComponent(busqueda)}`,
+          { credentials: "include" }
+        );
+
+        if (!res.ok) throw new Error("Error en búsqueda");
+
+        const data = await res.json();
+        setTurnos(Array.isArray(data) ? data : []);
+      } catch (err) {
+        console.error("Error buscando turnos:", err);
+      }
+    };
+
+    buscar();
   }, [busqueda]);
 
-  // ✅ confirmar turno
+  // ✅ confirmar turno (local + prod)
   const confirmar = async (id) => {
-    await fetch(`http://localhost:4000/api/recepcion/turnos/${id}/estado`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify({ estado: "confirmado" }),
-    });
+    try {
+      const res = await fetch(
+        `${API_URL}/recepcion/turnos/${id}/estado`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ estado: "confirmado" }),
+        }
+      );
 
-    setTurnos((prev) =>
-      prev.map((t) =>
-        t._id === id ? { ...t, estado: "confirmado" } : t
-      )
-    );
+      if (!res.ok) throw new Error("Error al confirmar");
+
+      setTurnos((prev) =>
+        prev.map((t) =>
+          t._id === id ? { ...t, estado: "confirmado" } : t
+        )
+      );
+    } catch (err) {
+      console.error("Error confirmando turno:", err);
+      alert("No se pudo confirmar el turno");
+    }
   };
 
   return (
@@ -74,17 +113,24 @@ export default function TurnosRecepcion() {
             {turnos.map((t) => (
               <tr key={t._id} className="text-center border-t">
                 <td>{t.hora}</td>
-                <td>{t.empleadoApellido} {t.empleadoNombre}</td>
+
+                <td>
+                  {t.empleadoApellido} {t.empleadoNombre}
+                </td>
+
                 <td>{t.empleadoDni}</td>
-                <td>{t.listaEstudios?.join(", ")}</td>
-                <td>{t.empresa?.razonSocial}</td>
+
+                <td>{t.listaEstudios?.join(", ") || "—"}</td>
+
+                <td>{t.empresa?.razonSocial || "—"}</td>
+
                 <td className="capitalize">{t.estado}</td>
 
                 <td>
                   {t.estado !== "confirmado" && (
                     <button
                       onClick={() => confirmar(t._id)}
-                      className="bg-green-600 text-white px-3 py-1 rounded"
+                      className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded"
                     >
                       Confirmar
                     </button>
@@ -94,8 +140,9 @@ export default function TurnosRecepcion() {
                 <td>
                   {t.estado === "confirmado" && (
                     <a
-                      href={`http://localhost:4000/api/recepcion/turnos/${t._id}/imprimir`}
+                      href={`${API_URL}/recepcion/turnos/${t._id}/imprimir`}
                       target="_blank"
+                      rel="noopener noreferrer"
                       className="text-blue-600 underline"
                     >
                       Imprimir
@@ -106,6 +153,17 @@ export default function TurnosRecepcion() {
             ))}
           </tbody>
         </table>
+
+        {/* MENSAJES */}
+        {!loading && turnos.length === 0 && (
+          <p className="text-center text-gray-500 p-4">
+            No hay turnos para mostrar.
+          </p>
+        )}
+
+        {loading && (
+          <p className="text-center text-gray-500 p-4">Cargando...</p>
+        )}
       </div>
     </div>
   );

@@ -3,24 +3,28 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
 export default function SuperAdminDashboard() {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
 
   const cargarStats = async () => {
     try {
-      const res = await fetch(
-        "http://localhost:4000/api/superadmin/stats",
-        { credentials: "include" }
-      );
+      const res = await fetch(`${API_URL}/superadmin/stats`, {
+        credentials: "include",
+      });
+
+      if (!res.ok) throw new Error("Error cargando estadísticas");
 
       const data = await res.json();
       setStats(data);
     } catch (err) {
+      console.error("Error cargando stats:", err);
       setStats(null);
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   };
 
   useEffect(() => {

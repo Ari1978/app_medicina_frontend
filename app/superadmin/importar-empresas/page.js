@@ -1,9 +1,10 @@
-
 "use client";
 
 import { useState } from "react";
 
-export default function ImportarEmpresas() {
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
+export default function ImportarEmpresasPage() {
   const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(false);
   const [resultado, setResultado] = useState(null);
@@ -24,7 +25,7 @@ export default function ImportarEmpresas() {
 
     try {
       const res = await fetch(
-        "http://localhost:4000/api/superadmin/empresas/import",
+        `${API_URL}/superadmin/empresas/import`,
         {
           method: "POST",
           credentials: "include",
@@ -62,15 +63,17 @@ export default function ImportarEmpresas() {
         <button
           type="submit"
           disabled={loading}
-          className="bg-blue-600 text-white px-4 py-2 rounded w-full"
+          className="bg-blue-600 text-white px-4 py-2 rounded w-full disabled:opacity-60"
         >
           {loading ? "Importando..." : "Importar"}
         </button>
       </form>
 
       {resultado && (
-        <div className="bg-green-100 border border-green-300 text-green-800 p-4 rounded">
-          <p><b>{resultado.message}</b></p>
+        <div className="bg-green-100 border border-green-300 text-green-800 p-4 rounded space-y-1">
+          <p>
+            <b>{resultado.message}</b>
+          </p>
           <p>Insertadas: {resultado.insertadas}</p>
           <p>Omitidas: {resultado.omitidas}</p>
           <p>Total: {resultado.total}</p>

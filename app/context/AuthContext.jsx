@@ -4,27 +4,32 @@ import { createContext, useEffect, useState } from "react";
 
 export const AuthContext = createContext(null);
 
+// ✅ API dinámico (Local + Producción)
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [role, setRole] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // ✅ SESIÓN AUTOMÁTICA (solo endpoints reales)
+  // ✅ SESIÓN AUTOMÁTICA (LOCAL + PRODUCCIÓN)
   useEffect(() => {
     if (typeof window === "undefined") return;
 
     const checkSession = async () => {
       try {
         const endpoints = [
-          { url: "http://localhost:4000/api/empresa/me", role: "empresa" },
-          { url: "http://localhost:4000/api/staff/auth/me", role: "staff" },
-          { url: "http://localhost:4000/api/admin/auth/me", role: "admin" },
-          { url: "http://localhost:4000/api/superadmin/auth/me", role: "superadmin" },
+          { url: `${API_URL}/empresa/me`, role: "empresa" },
+          { url: `${API_URL}/staff/auth/me`, role: "staff" },
+          { url: `${API_URL}/admin/auth/me`, role: "admin" },
+          { url: `${API_URL}/superadmin/auth/me`, role: "superadmin" },
         ];
 
         for (const ep of endpoints) {
           try {
-            const res = await fetch(ep.url, { credentials: "include" });
+            const res = await fetch(ep.url, {
+              credentials: "include",
+            });
 
             if (res.ok) {
               const data = await res.json();
@@ -48,10 +53,10 @@ export function AuthProvider({ children }) {
   // ✅ LOGIN UNIFICADO (CON SOPORTE mustChangePassword)
   const login = async (role, credentials) => {
     const urls = {
-      empresa: "http://localhost:4000/api/empresa/login",
-      staff: "http://localhost:4000/api/staff/auth/login",
-      admin: "http://localhost:4000/api/admin/auth/login",
-      superadmin: "http://localhost:4000/api/superadmin/auth/login",
+      empresa: `${API_URL}/empresa/login`,
+      staff: `${API_URL}/staff/auth/login`,
+      admin: `${API_URL}/admin/auth/login`,
+      superadmin: `${API_URL}/superadmin/auth/login`,
     };
 
     try {
@@ -66,7 +71,7 @@ export function AuthProvider({ children }) {
 
       if (!res.ok) throw new Error(data.message || "Login inválido");
 
-      // ✅ PRIMER ACCESO EMPRESA → NO SETEA USUARIO
+      // ✅ PRIMER ACCESO EMPRESA (NO CREA SESIÓN)
       if (data.mustChangePassword) {
         return {
           ok: true,
@@ -88,15 +93,18 @@ export function AuthProvider({ children }) {
   // ✅ LOGOUT UNIFICADO
   const logout = async () => {
     const urls = {
-      empresa: "http://localhost:4000/api/empresa/logout",
-      staff: "http://localhost:4000/api/staff/auth/logout",
-      admin: "http://localhost:4000/api/admin/auth/logout",
-      superadmin: "http://localhost:4000/api/superadmin/auth/logout",
+      empresa: `${API_URL}/empresa/logout`,
+      staff: `${API_URL}/staff/auth/logout`,
+      admin: `${API_URL}/admin/auth/logout`,
+      superadmin: `${API_URL}/superadmin/auth/logout`,
     };
 
     try {
       if (role) {
-        await fetch(urls[role], { method: "POST", credentials: "include" });
+        await fetch(urls[role], {
+          method: "POST",
+          credentials: "include",
+        });
       }
     } catch (_) {}
 

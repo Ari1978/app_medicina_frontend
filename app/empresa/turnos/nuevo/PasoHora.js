@@ -6,6 +6,7 @@ import { getDisponibilidad } from "@/app/empresa/api/disponibilidadApi";
 export default function Paso4Hora({ form, setForm, next, back }) {
   const [horas, setHoras] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     if (!form.fecha) return;
@@ -13,9 +14,16 @@ export default function Paso4Hora({ form, setForm, next, back }) {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const token = localStorage.getItem("tokenEmpresa");
-        const dispo = await getDisponibilidad(token, form.fecha);
-        setHoras(dispo);
+        setError("");
+
+        // ✅ Funciona con cookies en local y producción
+        const dispo = await getDisponibilidad(form.fecha);
+
+        setHoras(Array.isArray(dispo) ? dispo : []);
+      } catch (err) {
+        console.error("Error disponibilidad:", err);
+        setError("No se pudo cargar la disponibilidad");
+        setHoras([]);
       } finally {
         setLoading(false);
       }
@@ -26,7 +34,12 @@ export default function Paso4Hora({ form, setForm, next, back }) {
 
   const seleccionarHora = (h) => {
     if (!h.disponible) return;
-    setForm({ ...form, hora: h.hora });
+
+    setForm({
+      ...form,
+      hora: h.hora,
+    });
+
     next();
   };
 
@@ -36,6 +49,10 @@ export default function Paso4Hora({ form, setForm, next, back }) {
 
       {loading && (
         <p className="text-gray-600 text-sm">Cargando disponibilidad...</p>
+      )}
+
+      {error && (
+        <p className="text-red-600 text-sm font-semibold">{error}</p>
       )}
 
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
@@ -53,7 +70,9 @@ export default function Paso4Hora({ form, setForm, next, back }) {
             `}
           >
             {h.hora}
-            <div className="text-sm text-gray-700">Libres: {h.libres}</div>
+            <div className="text-sm text-gray-700">
+              Libres: {h.libres}
+            </div>
           </button>
         ))}
       </div>

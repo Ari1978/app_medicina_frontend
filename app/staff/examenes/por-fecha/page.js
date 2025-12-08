@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
 export default function TurnosPorFecha() {
   const [fecha, setFecha] = useState("");
   const [turnos, setTurnos] = useState([]);
@@ -14,17 +16,20 @@ export default function TurnosPorFecha() {
 
     try {
       const res = await fetch(
-        `http://localhost:4000/api/staff/examenes/por-fecha/${fecha}`,
+        `${API_URL}/staff/examenes/por-fecha/${fecha}`,
         { credentials: "include" }
       );
 
+      if (!res.ok) throw new Error("Error al buscar turnos");
+
       const data = await res.json();
-      setTurnos(data);
+      setTurnos(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error("Error al buscar turnos:", err);
+      setTurnos([]);
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   };
 
   return (
@@ -42,7 +47,7 @@ export default function TurnosPorFecha() {
 
         <button
           onClick={buscar}
-          className="bg-blue-600 text-white px-4 py-2 rounded"
+          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded"
         >
           Buscar
         </button>
@@ -89,7 +94,7 @@ export default function TurnosPorFecha() {
                 {/* DNI */}
                 <td className="border px-2 py-1">{t.empleadoDni}</td>
 
-                {/* ✅ ESTUDIOS (CORRECTO CON TUS DATOS) */}
+                {/* ✅ ESTUDIOS */}
                 <td className="border px-2 py-1 text-left">
                   {Array.isArray(t.listaEstudios) && t.listaEstudios.length > 0
                     ? t.listaEstudios.join(", ")
@@ -110,6 +115,7 @@ export default function TurnosPorFecha() {
                     <a
                       href={t.pdfResultado}
                       target="_blank"
+                      rel="noopener noreferrer"
                       className="text-blue-600 underline"
                     >
                       Ver

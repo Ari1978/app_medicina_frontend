@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
 const ESTUDIOS_DISPONIBLES = [
   { nombre: "Laboratorio", sector: "Laboratorio" },
   { nombre: "Electrocardiograma", sector: "Cardiología" },
@@ -23,31 +25,36 @@ export default function NuevoPerfilPage() {
   const [estudios, setEstudios] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  // ✅ Cargar empresas (blindado)
+  // ✅ Cargar empresas (local + producción)
   useEffect(() => {
     async function cargarEmpresas() {
       try {
-        const res = await fetch("http://localhost:4000/api/empresa", {
+        const res = await fetch(`${API_URL}/empresa`, {
           credentials: "include",
         });
+
+        if (!res.ok) throw new Error("Error cargando empresas");
+
         const data = await res.json();
-        setEmpresas(Array.isArray(data) ? data : data?.empresas || data?.data || []);
+        setEmpresas(
+          Array.isArray(data) ? data : data?.empresas || data?.data || []
+        );
       } catch (err) {
         console.error("Error cargando empresas:", err);
+        setEmpresas([]);
       }
     }
 
     cargarEmpresas();
   }, []);
 
-  // ✅ Agregar estudio desde selector
+  // ✅ Agregar estudio desde selector (sin duplicados)
   const agregarEstudio = (nombre) => {
     const seleccionado = ESTUDIOS_DISPONIBLES.find(
       (x) => x.nombre === nombre
     );
 
     if (!seleccionado) return;
-
     if (estudios.some((x) => x.nombre === seleccionado.nombre)) return;
 
     setEstudios([...estudios, seleccionado]);
@@ -68,7 +75,7 @@ export default function NuevoPerfilPage() {
     setLoading(true);
 
     try {
-      const res = await fetch("http://localhost:4000/api/perfil-examen", {
+      const res = await fetch(`${API_URL}/perfil-examen`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -88,9 +95,9 @@ export default function NuevoPerfilPage() {
     } catch (err) {
       console.error("Error creando perfil:", err.message);
       alert("Error al crear perfil");
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   };
 
   return (
@@ -155,7 +162,7 @@ export default function NuevoPerfilPage() {
               </span>
               <button
                 onClick={() => eliminarEstudio(i)}
-                className="text-red-600"
+                className="text-red-600 hover:text-red-800 font-bold"
               >
                 ✕
               </button>
@@ -168,7 +175,7 @@ export default function NuevoPerfilPage() {
       <div className="flex justify-between pt-4">
         <button
           onClick={() => router.back()}
-          className="px-4 py-2 border rounded"
+          className="px-4 py-2 border rounded hover:bg-gray-100"
         >
           Cancelar
         </button>

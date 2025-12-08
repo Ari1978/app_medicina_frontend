@@ -4,6 +4,8 @@
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
 export default function EditarPerfil() {
   const router = useRouter();
   const { id } = useParams();
@@ -14,17 +16,34 @@ export default function EditarPerfil() {
   const [nombre, setNombre] = useState("");
   const [sector, setSector] = useState("");
 
+  const [loading, setLoading] = useState(true);
+
+  // ✅ Cargar perfil
   useEffect(() => {
-    fetch(`http://localhost:4000/api/perfil-examen/${id}`, {
-      credentials: "include",
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        setPuesto(data.puesto);
-        setEstudios(data.estudios || []);
-      });
+    if (!id) return;
+
+    const cargarPerfil = async () => {
+      try {
+        const res = await fetch(`${API_URL}/perfil-examen/${id}`, {
+          credentials: "include",
+        });
+
+        if (!res.ok) throw new Error("Error al cargar perfil");
+
+        const data = await res.json();
+        setPuesto(data.puesto || "");
+        setEstudios(Array.isArray(data.estudios) ? data.estudios : []);
+      } catch (err) {
+        console.error("Error cargando perfil:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    cargarPerfil();
   }, [id]);
 
+  // ✅ Agregar estudio
   const agregar = () => {
     if (!nombre || !sector) return;
 
@@ -33,20 +52,36 @@ export default function EditarPerfil() {
     setSector("");
   };
 
+  // ✅ Eliminar estudio
   const eliminar = (i) => {
     setEstudios(estudios.filter((_, index) => index !== i));
   };
 
+  // ✅ Guardar cambios
   const guardar = async () => {
-    await fetch(`http://localhost:4000/api/perfil-examen/${id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify({ puesto, estudios }),
-    });
+    try {
+      await fetch(`${API_URL}/perfil-examen/${id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({ puesto, estudios }),
+      });
 
-    router.push("/staff/examenes/perfiles");
+      router.push("/staff/examenes/perfiles");
+    } catch (err) {
+      console.error("Error al guardar perfil:", err);
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-[300px] flex items-center justify-center text-gray-600">
+        Cargando perfil...
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-2xl mx-auto bg-white p-6 shadow rounded">
@@ -56,6 +91,7 @@ export default function EditarPerfil() {
         value={puesto}
         onChange={(e) => setPuesto(e.target.value)}
         className="w-full border rounded px-3 py-2 mb-4"
+        placeholder="Puesto"
       />
 
       <div className="flex gap-2 mb-4">
@@ -71,7 +107,10 @@ export default function EditarPerfil() {
           className="border px-3 py-2 flex-1"
           placeholder="Sector"
         />
-        <button onClick={agregar} className="bg-blue-600 text-white px-4">
+        <button
+          onClick={agregar}
+          className="bg-blue-600 hover:bg-blue-700 text-white px-4 rounded"
+        >
           +
         </button>
       </div>
@@ -80,10 +119,15 @@ export default function EditarPerfil() {
         {estudios.map((e, i) => (
           <li
             key={i}
-            className="flex justify-between bg-gray-100 px-3 py-1 mb-1"
+            className="flex justify-between items-center bg-gray-100 px-3 py-1 mb-1 rounded"
           >
-            {e.nombre} ({e.sector})
-            <button onClick={() => eliminar(i)} className="text-red-600">
+            <span>
+              {e.nombre} ({e.sector})
+            </span>
+            <button
+              onClick={() => eliminar(i)}
+              className="text-red-600 hover:text-red-800 font-bold"
+            >
               ✕
             </button>
           </li>
@@ -93,14 +137,14 @@ export default function EditarPerfil() {
       <div className="flex justify-between">
         <button
           onClick={() => router.back()}
-          className="border px-4 py-2"
+          className="border px-4 py-2 rounded hover:bg-gray-100"
         >
           Cancelar
         </button>
 
         <button
           onClick={guardar}
-          className="bg-green-600 text-white px-6 py-2"
+          className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded"
         >
           Guardar
         </button>

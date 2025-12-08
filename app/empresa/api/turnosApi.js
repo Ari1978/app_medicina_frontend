@@ -1,3 +1,5 @@
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
 export async function crearTurno(token, data) {
   // ✅ Construimos el payload limpio según el tipo
   const payload = {
@@ -27,13 +29,13 @@ export async function crearTurno(token, data) {
     payload.listaEstudios = data.listaEstudios; // obligatorio
   }
 
-  const res = await fetch("http://localhost:4000/api/empresa/turnos", {
+  const res = await fetch(`${API_URL}/empresa/turnos`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
+      Authorization: token ? `Bearer ${token}` : undefined, // ✅ JWT opcional
     },
-    credentials: "include",
+    credentials: "include", // ✅ cookies en local y producción
     body: JSON.stringify(payload),
   });
 

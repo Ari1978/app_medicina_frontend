@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
 export default function StaffAdminPage() {
   const [staff, setStaff] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -28,10 +30,14 @@ export default function StaffAdminPage() {
 
   const [permisos, setPermisos] = useState("");
 
+  // ============================
+  // CARGAR STAFF (LOCAL + PROD)
+  // ============================
+
   const cargarStaff = async () => {
     setLoading(true);
 
-    const res = await fetch("http://localhost:4000/api/superadmin/staff", {
+    const res = await fetch(`${API_URL}/superadmin/staff`, {
       credentials: "include",
     });
 
@@ -53,7 +59,7 @@ export default function StaffAdminPage() {
   }, []);
 
   // ============================
-  // CRUD ACTIONS
+  // CRUD ACTIONS (LOCAL + PROD)
   // ============================
 
   const crearStaff = async () => {
@@ -62,7 +68,7 @@ export default function StaffAdminPage() {
       return;
     }
 
-    const res = await fetch("http://localhost:4000/api/superadmin/staff", {
+    const res = await fetch(`${API_URL}/superadmin/staff`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "include",
@@ -82,117 +88,114 @@ export default function StaffAdminPage() {
   };
 
   const editarStaff = async () => {
-  if (!selected?._id) return;
+    if (!selected?._id) return;
 
-  const res = await fetch(
-    `http://localhost:4000/api/superadmin/staff/${selected._id}`,
-    {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify(formEdit),
+    const res = await fetch(
+      `${API_URL}/superadmin/staff/${selected._id}`,
+      {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(formEdit),
+      }
+    );
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      alert(data.message || "Error al editar");
+      return;
     }
-  );
 
-  const data = await res.json();
-
-  if (!res.ok) {
-    alert(data.message || "Error al editar");
-    return;
-  }
-
-  setShowEdit(false);
-  setSelected(null);
-  cargarStaff();
-};
-
+    setShowEdit(false);
+    setSelected(null);
+    cargarStaff();
+  };
 
   const resetPassword = async () => {
-  if (!selected?._id) return;
-  if (!formReset.password) {
-    alert("Ingresá una contraseña");
-    return;
-  }
-
-  const res = await fetch(
-    `http://localhost:4000/api/superadmin/staff/${selected._id}/reset-password`,
-    {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify(formReset),
+    if (!selected?._id) return;
+    if (!formReset.password) {
+      alert("Ingresá una contraseña");
+      return;
     }
-  );
 
-  const data = await res.json();
+    const res = await fetch(
+      `${API_URL}/superadmin/staff/${selected._id}/reset-password`,
+      {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(formReset),
+      }
+    );
 
-  if (!res.ok) {
-    alert(data.message || "Error al resetear password");
-    return;
-  }
+    const data = await res.json();
 
-  setShowReset(false);
-  setFormReset({ password: "" });
-  setSelected(null);
-  alert("Contraseña reseteada");
-};
-
-
- const guardarPermisos = async () => {
-  if (!selected?._id) return;
-
-  const permisosArray = permisos
-    .split(",")
-    .map((p) => p.trim())
-    .filter(Boolean);
-
-  const res = await fetch(
-    `http://localhost:4000/api/superadmin/staff/${selected._id}/permisos`,
-    {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify({ permisos: permisosArray }),
+    if (!res.ok) {
+      alert(data.message || "Error al resetear password");
+      return;
     }
-  );
 
-  const data = await res.json();
+    setShowReset(false);
+    setFormReset({ password: "" });
+    setSelected(null);
+    alert("Contraseña reseteada");
+  };
 
-  if (!res.ok) {
-    alert(data.message || "Error al guardar permisos");
-    return;
-  }
+  const guardarPermisos = async () => {
+    if (!selected?._id) return;
 
-  setShowPermisos(false);
-  setSelected(null);
-  setPermisos("");
-  cargarStaff();
-};
+    const permisosArray = permisos
+      .split(",")
+      .map((p) => p.trim())
+      .filter(Boolean);
 
+    const res = await fetch(
+      `${API_URL}/superadmin/staff/${selected._id}/permisos`,
+      {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ permisos: permisosArray }),
+      }
+    );
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      alert(data.message || "Error al guardar permisos");
+      return;
+    }
+
+    setShowPermisos(false);
+    setSelected(null);
+    setPermisos("");
+    cargarStaff();
+  };
 
   const eliminarStaff = async (id) => {
-  if (!id) return;
+    if (!id) return;
 
-  const ok = confirm("¿Seguro que querés eliminar este staff?");
-  if (!ok) return;
+    const ok = confirm("¿Seguro que querés eliminar este staff?");
+    if (!ok) return;
 
-  const res = await fetch(
-    `http://localhost:4000/api/superadmin/staff/${id}`,
-    {
-      method: "DELETE",
-      credentials: "include",
+    const res = await fetch(
+      `${API_URL}/superadmin/staff/${id}`,
+      {
+        method: "DELETE",
+        credentials: "include",
+      }
+    );
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      alert(data.message || "Error al eliminar");
+      return;
     }
-  );
 
-  const data = await res.json();
-
-  if (!res.ok) {
-    alert(data.message || "Error al eliminar");
-    return;
-  }
-
-  cargarStaff();
-};
+    cargarStaff();
+  };
 
   // ============================
   // RENDER

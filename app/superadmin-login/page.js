@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
 export default function SuperAdminLoginPage() {
   const router = useRouter();
 
@@ -25,7 +27,7 @@ export default function SuperAdminLoginPage() {
     setLoading(true);
 
     try {
-      const res = await fetch("http://localhost:4000/api/superadmin/login", {
+      const res = await fetch(`${API_URL}/superadmin/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

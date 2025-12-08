@@ -4,21 +4,28 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
 export default function PerfilesPage() {
   const [perfiles, setPerfiles] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const cargar = async () => {
     try {
-      const res = await fetch("http://localhost:4000/api/perfil-examen", {
+      const res = await fetch(`${API_URL}/perfil-examen`, {
         credentials: "include",
       });
+
+      if (!res.ok) throw new Error("Error al cargar perfiles");
+
       const data = await res.json();
-      setPerfiles(data);
+      setPerfiles(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error("Error cargando perfiles:", err);
+      setPerfiles([]);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   useEffect(() => {
@@ -29,7 +36,9 @@ export default function PerfilesPage() {
     <div>
       {/* HEADER */}
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold text-gray-800">Perfiles de Exámenes</h2>
+        <h2 className="text-2xl font-bold text-gray-800">
+          Perfiles de Exámenes
+        </h2>
 
         <Link
           href="/staff/examenes/perfiles/nuevo"
@@ -60,7 +69,9 @@ export default function PerfilesPage() {
               <p className="text-sm mb-3">
                 Estudios:{" "}
                 {p.estudios?.length
-                  ? p.estudios.map((e) => `${e.nombre} (${e.sector})`).join(", ")
+                  ? p.estudios
+                      .map((e) => `${e.nombre} (${e.sector})`)
+                      .join(", ")
                   : "—"}
               </p>
 

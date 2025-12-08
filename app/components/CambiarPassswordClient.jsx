@@ -1,13 +1,19 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
-import { Card, CardHeader, CardTitle, CardContent } from "@/app/components/ui/card";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+} from "@/app/components/ui/card";
 import { Input } from "@/app/components/ui/input";
 import { Label } from "@/app/components/ui/label";
 import { Button } from "@/app/components/ui/button";
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export default function CambiarPasswordClient() {
   const router = useRouter();
@@ -44,11 +50,16 @@ export default function CambiarPasswordClient() {
     }
 
     try {
-      const res = await fetch("http://localhost:4000/api/empresa/cambiar-password", {
+      const res = await fetch(`${API_URL}/empresa/cambiar-password`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+        },
         credentials: "include",
-        body: JSON.stringify({ empresaId, password }),
+        body: JSON.stringify({
+          empresaId,
+          password,
+        }),
       });
 
       const data = await res.json();

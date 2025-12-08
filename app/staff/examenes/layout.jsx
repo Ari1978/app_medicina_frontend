@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
 export default function ExamenesLayout({ children }) {
   const router = useRouter();
   const [cargando, setCargando] = useState(true);
@@ -11,10 +13,9 @@ export default function ExamenesLayout({ children }) {
   useEffect(() => {
     async function fetchStaff() {
       try {
-        const res = await fetch(
-          "http://localhost:4000/api/staff/auth/me",
-          { credentials: "include" }
-        );
+        const res = await fetch(`${API_URL}/staff/auth/me`, {
+          credentials: "include",
+        });
 
         if (!res.ok) {
           router.push("/staff/login");
@@ -31,9 +32,9 @@ export default function ExamenesLayout({ children }) {
         setStaff(data);
       } catch (err) {
         router.push("/staff/login");
+      } finally {
+        setCargando(false);
       }
-
-      setCargando(false);
     }
 
     fetchStaff();
@@ -51,11 +52,9 @@ export default function ExamenesLayout({ children }) {
 
   return (
     <div className="min-h-screen bg-linear-to-br from-gray-50 to-gray-100">
-      
       {/* HEADER */}
       <header className="bg-white/80 backdrop-blur border-b shadow-sm sticky top-0 z-50">
         <div className="max-w-7xl mx-auto flex items-center justify-between px-6 py-4">
-          
           <div>
             <h1 className="text-2xl font-bold text-gray-800">
               Panel Staff - Exámenes
@@ -67,11 +66,12 @@ export default function ExamenesLayout({ children }) {
 
           <button
             onClick={async () => {
-              await fetch("http://localhost:4000/api/staff/auth/logout", {
+              await fetch(`${API_URL}/staff/auth/logout`, {
                 method: "POST",
                 credentials: "include",
               });
-              router.push("/staff-login");
+
+              router.push("/staff/login");
             }}
             className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-semibold shadow transition"
           >

@@ -4,14 +4,20 @@ import { useEffect, useState } from "react";
 import EmpresaSummary from "../components/EmpresaSumary";
 import { TurnoProvider } from "@/app/context/TurnoContext";
 
+// ✅ API dinámico (LOCAL + PRODUCCIÓN)
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
 export default function EmpresaLayout({ children }) {
   const [empresa, setEmpresa] = useState(null);
 
   useEffect(() => {
-    fetch("http://localhost:4000/api/empresa/me", {
+    fetch(`${API_URL}/empresa/me`, {
       credentials: "include",
     })
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) throw new Error("No autenticado");
+        return res.json();
+      })
       .then((data) => setEmpresa(data))
       .catch(() => setEmpresa(null));
   }, []);
@@ -19,12 +25,11 @@ export default function EmpresaLayout({ children }) {
   return (
     <TurnoProvider>
       <main className="bg-linear-to-br from-blue-50 to-blue-100 h-screen overflow-y-auto p-4 sm:p-6">
-
-        {/* ✅ BOTÓN RESPONSIVE QUE YA NO TAPA EL TÍTULO */}
+        {/* ✅ BOTÓN CERRAR SESIÓN */}
         <button
           onClick={async () => {
             try {
-              await fetch("http://localhost:4000/api/empresa/logout", {
+              await fetch(`${API_URL}/empresa/logout`, {
                 method: "POST",
                 credentials: "include",
               });
@@ -47,15 +52,15 @@ export default function EmpresaLayout({ children }) {
           Cerrar sesión
         </button>
 
+        {/* ✅ RESUMEN EMPRESA */}
         {empresa && (
           <div className="max-w-6xl mx-auto mb-6">
             <EmpresaSummary empresa={empresa} />
           </div>
         )}
 
-        <div className="max-w-6xl mx-auto pb-20">
-          {children}
-        </div>
+        {/* ✅ CONTENIDO */}
+        <div className="max-w-6xl mx-auto pb-20">{children}</div>
       </main>
     </TurnoProvider>
   );

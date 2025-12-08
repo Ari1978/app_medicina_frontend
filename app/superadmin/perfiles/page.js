@@ -3,6 +3,8 @@
 
 import { useEffect, useState } from "react";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
 export default function SuperAdminPerfilesPage() {
   const [perfiles, setPerfiles] = useState([]);
   const [empresas, setEmpresas] = useState([]);
@@ -35,10 +37,9 @@ export default function SuperAdminPerfilesPage() {
   // ============================
 
   const cargarPerfiles = async () => {
-    const res = await fetch(
-      "http://localhost:4000/api/perfil-examen",
-      { credentials: "include" }
-    );
+    const res = await fetch(`${API_URL}/perfil-examen`, {
+      credentials: "include",
+    });
 
     const data = await res.json();
     setPerfiles(Array.isArray(data) ? data : []);
@@ -46,7 +47,7 @@ export default function SuperAdminPerfilesPage() {
 
   const cargarEmpresas = async () => {
     const res = await fetch(
-      "http://localhost:4000/api/superadmin/empresas-finales",
+      `${API_URL}/superadmin/empresas-finales`,
       { credentials: "include" }
     );
 
@@ -84,15 +85,12 @@ export default function SuperAdminPerfilesPage() {
       return;
     }
 
-    const res = await fetch(
-      `http://localhost:4000/api/perfil-examen`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify(formCreate),
-      }
-    );
+    const res = await fetch(`${API_URL}/perfil-examen`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify(formCreate),
+    });
 
     const data = await res.json();
 
@@ -110,13 +108,10 @@ export default function SuperAdminPerfilesPage() {
     const ok = confirm("¿Eliminar este perfil?");
     if (!ok) return;
 
-    const res = await fetch(
-      `http://localhost:4000/api/perfil-examen/${id}`,
-      {
-        method: "DELETE",
-        credentials: "include",
-      }
-    );
+    await fetch(`${API_URL}/perfil-examen/${id}`, {
+      method: "DELETE",
+      credentials: "include",
+    });
 
     await cargarPerfiles();
   };
@@ -153,19 +148,20 @@ export default function SuperAdminPerfilesPage() {
           <tbody>
             {perfiles.map((p) => (
               <tr key={p._id} className="border-t">
-                <td className="p-3">{p.nombre}</td>
+                <td className="p-3">{p.puesto}</td>
                 <td className="p-3">
                   {p.empresa?.razonSocial || "—"}
                 </td>
                 <td className="p-3 text-sm">
-                  {p.estudios.map((e, i) => (
-                    <span
-                      key={i}
-                      className="inline-block bg-gray-200 px-2 py-1 rounded mr-1 mb-1"
-                    >
-                      {e.nombre} ({e.sector})
-                    </span>
-                  ))}
+                  {Array.isArray(p.estudios) &&
+                    p.estudios.map((e, i) => (
+                      <span
+                        key={i}
+                        className="inline-block bg-gray-200 px-2 py-1 rounded mr-1 mb-1"
+                      >
+                        {e.nombre} ({e.sector})
+                      </span>
+                    ))}
                 </td>
                 <td className="p-3">
                   <button
@@ -200,7 +196,10 @@ export default function SuperAdminPerfilesPage() {
             className="border p-2 rounded w-full"
             value={formCreate.empresaId}
             onChange={(e) =>
-              setFormCreate({ ...formCreate, empresaId: e.target.value })
+              setFormCreate({
+                ...formCreate,
+                empresaId: e.target.value,
+              })
             }
           >
             <option value="">Seleccionar empresa</option>

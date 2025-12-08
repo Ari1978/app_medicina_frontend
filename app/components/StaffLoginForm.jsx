@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
 export default function StaffLoginForm() {
   const router = useRouter();
 
@@ -11,7 +13,7 @@ export default function StaffLoginForm() {
     password: "",
   });
 
-  const [showPassword, setShowPassword] = useState(false); // 👁️ ojito
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -28,37 +30,33 @@ export default function StaffLoginForm() {
     setError("");
 
     try {
-      const res = await fetch("http://localhost:4000/api/staff/auth/login", {
+      const res = await fetch(`${API_URL}/staff/auth/login`, {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
       });
 
+      const data = await res.json();
+
       if (!res.ok) {
-        setError("Credenciales incorrectas");
+        setError(data?.message || "Credenciales incorrectas");
         setLoading(false);
         return;
       }
-
-      const data = await res.json();
 
       const permisos = data.staff?.permisos || [];
 
       // ✅ REDIRECCIÓN POR PERMISOS
       if (permisos.includes("examenes")) {
         router.push("/staff/examenes/dashboard");
-      } 
-      else if (permisos.includes("estudios")) {
+      } else if (permisos.includes("estudios")) {
         router.push("/staff/estudios/dashboard");
-      } 
-      else if (permisos.includes("recepcion")) {
-        router.push("/staff/recepcion/dashboard"); // ✅ RECEPCIÓN
-      } 
-      else {
+      } else if (permisos.includes("recepcion")) {
+        router.push("/staff/recepcion/dashboard");
+      } else {
         router.push("/staff/sin-permisos");
       }
-
     } catch (err) {
       setError("Error en el servidor");
     }
@@ -68,6 +66,7 @@ export default function StaffLoginForm() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
+      {/* USUARIO */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">
           Usuario

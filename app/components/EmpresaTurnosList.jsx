@@ -1,5 +1,7 @@
 "use client";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
 function puedeCancelar(turno) {
   const ahora = new Date();
 
@@ -14,16 +16,22 @@ function puedeCancelar(turno) {
 }
 
 async function cancelarTurno(id) {
-  const resp = await fetch(`http://localhost:4000/api/empresa/turnos/${id}/cancelar`, {
-    method: "PATCH",
-    credentials: "include",
-  });
+  try {
+    const resp = await fetch(`${API_URL}/empresa/turnos/${id}/cancelar`, {
+      method: "PATCH",
+      credentials: "include",
+    });
 
-  if (!resp.ok) {
-    alert("No se pudo cancelar el turno");
-  } else {
-    alert("Turno cancelado con éxito");
-    location.reload();
+    const data = await resp.json();
+
+    if (!resp.ok) {
+      alert(data.message || "No se pudo cancelar el turno");
+    } else {
+      alert("Turno cancelado con éxito");
+      location.reload();
+    }
+  } catch (error) {
+    alert("Error de conexión con el servidor");
   }
 }
 
@@ -44,7 +52,6 @@ export default function TurnosList({ turnos }) {
           className="bg-white shadow border border-gray-200 rounded-lg p-4"
         >
           <div className="flex justify-between items-center mb-2">
-
             <h2 className="text-xl font-semibold text-blue-700">
               {t.tipo === "examen" ? "🩺 Examen" : "🔬 Estudio"}
             </h2>
@@ -113,7 +120,6 @@ export default function TurnosList({ turnos }) {
               </p>
             )}
           </div>
-
         </div>
       ))}
     </div>

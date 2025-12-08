@@ -1,24 +1,31 @@
 
 "use client";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
 export default function GeoAdminPage() {
   const sync = async () => {
     const ok = confirm("¿Seguro que querés sincronizar toda la geografía?");
     if (!ok) return;
 
-    const res = await fetch("http://localhost:4000/api/geo/sync", {
-      method: "POST",
-      credentials: "include",
-    });
+    try {
+      const res = await fetch(`${API_URL}/geo/sync`, {
+        method: "POST",
+        credentials: "include",
+      });
 
-    const data = await res.json();
+      const data = await res.json();
 
-    if (!res.ok) {
-      alert(data.message || "Error al sincronizar");
-      return;
+      if (!res.ok) {
+        alert(data.message || "Error al sincronizar");
+        return;
+      }
+
+      alert("Geografía sincronizada correctamente");
+    } catch (err) {
+      console.error("Error sincronizando geografía:", err);
+      alert("Error de conexión al sincronizar");
     }
-
-    alert("Geografía sincronizada correctamente");
   };
 
   return (

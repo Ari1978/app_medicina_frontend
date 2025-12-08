@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
 export default function EmpresasAdminPage() {
   const [empresas, setEmpresas] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -14,7 +16,7 @@ export default function EmpresasAdminPage() {
   });
 
   // ============================
-  // CARGAR EMPRESAS
+  // CARGAR EMPRESAS (LOCAL + PROD)
   // ============================
 
   const cargarEmpresas = async () => {
@@ -22,7 +24,7 @@ export default function EmpresasAdminPage() {
 
     try {
       const res = await fetch(
-        "http://localhost:4000/api/superadmin/empresas-finales",
+        `${API_URL}/superadmin/empresas-finales`,
         { credentials: "include" }
       );
 
@@ -47,14 +49,14 @@ export default function EmpresasAdminPage() {
   }, []);
 
   // ============================
-  // ACCIONES
+  // ACCIONES (LOCAL + PROD)
   // ============================
 
   const toggleEmpresa = async (empresa) => {
     if (!empresa?._id) return;
 
     const res = await fetch(
-      `http://localhost:4000/api/superadmin/empresas-finales/${empresa._id}`,
+      `${API_URL}/superadmin/empresas-finales/${empresa._id}`,
       {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -81,7 +83,7 @@ export default function EmpresasAdminPage() {
     }
 
     const res = await fetch(
-      `http://localhost:4000/api/superadmin/empresas-finales/${selected._id}/reset-password`,
+      `${API_URL}/superadmin/empresas-finales/${selected._id}/reset-password`,
       {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -110,7 +112,7 @@ export default function EmpresasAdminPage() {
     if (!ok) return;
 
     const res = await fetch(
-      `http://localhost:4000/api/superadmin/empresasfinales/${id}`,
+      `${API_URL}/superadmin/empresas-finales/${id}`,
       {
         method: "DELETE",
         credentials: "include",
@@ -157,10 +159,7 @@ export default function EmpresasAdminPage() {
 
             {!loading &&
               empresas.map((e) => (
-                <tr
-                  key={e._id || e.cuit}
-                  className="border-t"
-                >
+                <tr key={e._id || e.cuit} className="border-t">
                   <td className="p-3">{e.razonSocial}</td>
                   <td className="p-3">{e.cuit}</td>
                   <td className="p-3">{e.art}</td>

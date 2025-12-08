@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
 export default function RecepcionLayout({ children }) {
   const router = useRouter();
   const [cargando, setCargando] = useState(true);
@@ -10,7 +12,7 @@ export default function RecepcionLayout({ children }) {
   useEffect(() => {
     async function check() {
       try {
-        const res = await fetch("http://localhost:4000/api/staff/auth/me", {
+        const res = await fetch(`${API_URL}/staff/auth/me`, {
           credentials: "include",
         });
 
@@ -51,10 +53,11 @@ export default function RecepcionLayout({ children }) {
 
           <button
             onClick={async () => {
-              await fetch("http://localhost:4000/api/staff/auth/logout", {
+              await fetch(`${API_URL}/staff/auth/logout`, {
                 method: "POST",
                 credentials: "include",
               });
+
               router.push("/staff/login");
             }}
             className="text-red-600 hover:underline"

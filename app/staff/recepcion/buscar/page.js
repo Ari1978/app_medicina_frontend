@@ -1,19 +1,35 @@
-
 "use client";
 
 import { useState } from "react";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
 export default function BuscarTurno() {
   const [query, setQuery] = useState("");
   const [resultados, setResultados] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   const buscar = async () => {
-    const res = await fetch(
-      `http://localhost:4000/api/recepcion/buscar?query=${query}`,
-      { credentials: "include" }
-    );
-    const data = await res.json();
-    setResultados(data);
+    if (!query) return;
+
+    setLoading(true);
+
+    try {
+      const res = await fetch(
+        `${API_URL}/recepcion/buscar?query=${encodeURIComponent(query)}`,
+        { credentials: "include" }
+      );
+
+      if (!res.ok) throw new Error("Error en la búsqueda");
+
+      const data = await res.json();
+      setResultados(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error("Error buscando turno:", err);
+      setResultados([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -30,13 +46,14 @@ export default function BuscarTurno() {
 
         <button
           onClick={buscar}
-          className="bg-blue-600 text-white px-4 rounded"
+          disabled={loading}
+          className="bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white px-4 rounded"
         >
-          Buscar
+          {loading ? "Buscando..." : "Buscar"}
         </button>
       </div>
 
-      <pre className="bg-white p-4 rounded shadow">
+      <pre className="bg-white p-4 rounded shadow overflow-x-auto text-sm">
         {JSON.stringify(resultados, null, 2)}
       </pre>
     </div>

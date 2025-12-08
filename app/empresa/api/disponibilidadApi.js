@@ -1,13 +1,17 @@
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
 export async function getDisponibilidad(token, fecha) {
-  const url = `http://localhost:4000/api/empresa/disponibilidad?fecha=${encodeURIComponent(fecha)}`;
+  const url = `${API_URL}/empresa/disponibilidad?fecha=${encodeURIComponent(
+    fecha
+  )}`;
 
   const res = await fetch(url, {
     method: "GET",
     headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json"
+      "Content-Type": "application/json",
+      Authorization: token ? `Bearer ${token}` : undefined, // ✅ JWT opcional
     },
-    credentials: "include"
+    credentials: "include", // ✅ cookies en local y producción
   });
 
   if (!res.ok) {

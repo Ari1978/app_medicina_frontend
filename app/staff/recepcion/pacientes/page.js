@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
 export default function NuevoPacientePage() {
   const [loading, setLoading] = useState(false);
 
@@ -28,7 +30,7 @@ export default function NuevoPacientePage() {
   });
 
   // ===============================
-  // ✅ AUTOCOMPLETE INCREMENTAL REAL
+  // ✅ AUTOCOMPLETE INCREMENTAL REAL (LOCAL + PROD)
   // ===============================
   useEffect(() => {
     if (busquedaEmpresa.length < 2) {
@@ -39,14 +41,17 @@ export default function NuevoPacientePage() {
     const buscar = async () => {
       try {
         const res = await fetch(
-          `http://localhost:4000/api/empresa/buscar?query=${busquedaEmpresa}`,
+          `${API_URL}/empresa/buscar?query=${encodeURIComponent(busquedaEmpresa)}`,
           { credentials: "include" }
         );
+
+        if (!res.ok) throw new Error("Error en búsqueda");
 
         const data = await res.json();
         setSugerencias(Array.isArray(data) ? data : []);
       } catch (err) {
         console.error("Error buscando empresas", err);
+        setSugerencias([]);
       }
     };
 
@@ -70,7 +75,7 @@ export default function NuevoPacientePage() {
   };
 
   // ===============================
-  // ✅ GUARDA REAL EN BACKEND
+  // ✅ GUARDA REAL EN BACKEND (LOCAL + PROD)
   // ===============================
   const guardar = async () => {
     if (!form.empresa || !form.apellido || !form.nombre || !form.dni) {
@@ -81,18 +86,14 @@ export default function NuevoPacientePage() {
     setLoading(true);
 
     try {
-      const res = await fetch(
-        "http://localhost:4000/api/recepcion/pacientes",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify(form),
-        }
-      );
+      const res = await fetch(`${API_URL}/recepcion/pacientes`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(form),
+      });
 
       const data = await res.json();
-
       if (!res.ok) throw new Error(data.message || "Error");
 
       alert("✅ Paciente guardado correctamente");
@@ -121,9 +122,9 @@ export default function NuevoPacientePage() {
     } catch (err) {
       console.error(err);
       alert("❌ Error al guardar paciente");
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   };
 
   return (

@@ -3,6 +3,8 @@
 
 import { useEffect, useState } from "react";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
 export default function AdminAdminPage() {
   const [admins, setAdmins] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -30,14 +32,14 @@ export default function AdminAdminPage() {
   const [permisos, setPermisos] = useState("");
 
   // ============================
-  // CARGAR ADMINS
+  // CARGAR ADMINS (LOCAL + PROD)
   // ============================
 
   const cargarAdmins = async () => {
     setLoading(true);
 
     try {
-      const res = await fetch("http://localhost:4000/api/superadmin/admins", {
+      const res = await fetch(`${API_URL}/superadmin/admins`, {
         credentials: "include",
       });
 
@@ -62,7 +64,7 @@ export default function AdminAdminPage() {
   }, []);
 
   // ============================
-  // CRUD
+  // CRUD (LOCAL + PROD)
   // ============================
 
   const crearAdmin = async () => {
@@ -71,7 +73,7 @@ export default function AdminAdminPage() {
       return;
     }
 
-    const res = await fetch("http://localhost:4000/api/superadmin/admins", {
+    const res = await fetch(`${API_URL}/superadmin/admins`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "include",
@@ -94,7 +96,7 @@ export default function AdminAdminPage() {
     if (!selected?._id) return;
 
     const res = await fetch(
-      `http://localhost:4000/api/superadmin/admins/${selected._id}`,
+      `${API_URL}/superadmin/admins/${selected._id}`,
       {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -123,7 +125,7 @@ export default function AdminAdminPage() {
     }
 
     const res = await fetch(
-      `http://localhost:4000/api/superadmin/admins/${selected._id}/reset-password`,
+      `${API_URL}/superadmin/admins/${selected._id}/reset-password`,
       {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -154,7 +156,7 @@ export default function AdminAdminPage() {
       .filter(Boolean);
 
     const res = await fetch(
-      `http://localhost:4000/api/superadmin/admins/${selected._id}/permisos`,
+      `${API_URL}/superadmin/admins/${selected._id}/permisos`,
       {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -183,7 +185,7 @@ export default function AdminAdminPage() {
     if (!ok) return;
 
     const res = await fetch(
-      `http://localhost:4000/api/superadmin/admins/${id}`,
+      `${API_URL}/superadmin/admins/${id}`,
       {
         method: "DELETE",
         credentials: "include",
@@ -229,10 +231,7 @@ export default function AdminAdminPage() {
           <tbody>
             {loading && (
               <tr>
-                <td
-                  colSpan="3"
-                  className="p-4 text-center text-gray-500"
-                >
+                <td colSpan="3" className="p-4 text-center text-gray-500">
                   Cargando admins...
                 </td>
               </tr>
@@ -240,10 +239,7 @@ export default function AdminAdminPage() {
 
             {!loading &&
               admins.map((a) => (
-                <tr
-                  key={a._id || a.username}
-                  className="border-t"
-                >
+                <tr key={a._id || a.username} className="border-t">
                   <td className="p-3">{a.username}</td>
                   <td className="p-3 text-sm text-gray-600">
                     {(a.permisos || []).join(", ")}
@@ -299,10 +295,7 @@ export default function AdminAdminPage() {
       {/* ===================== */}
 
       {showCreate && (
-        <Modal
-          onClose={() => setShowCreate(false)}
-          title="Crear Admin"
-        >
+        <Modal onClose={() => setShowCreate(false)} title="Crear Admin">
           <input
             placeholder="Username"
             className="border p-2 rounded w-full"
@@ -337,10 +330,7 @@ export default function AdminAdminPage() {
       )}
 
       {showEdit && selected && (
-        <Modal
-          onClose={() => setShowEdit(false)}
-          title="Editar Admin"
-        >
+        <Modal onClose={() => setShowEdit(false)} title="Editar Admin">
           <input
             placeholder="Username"
             className="border p-2 rounded w-full"
@@ -363,10 +353,7 @@ export default function AdminAdminPage() {
       )}
 
       {showReset && selected && (
-        <Modal
-          onClose={() => setShowReset(false)}
-          title="Resetear Password"
-        >
+        <Modal onClose={() => setShowReset(false)} title="Resetear Password">
           <input
             type="password"
             placeholder="Nueva contraseña"
@@ -387,10 +374,7 @@ export default function AdminAdminPage() {
       )}
 
       {showPermisos && selected && (
-        <Modal
-          onClose={() => setShowPermisos(false)}
-          title="Permisos"
-        >
+        <Modal onClose={() => setShowPermisos(false)} title="Permisos">
           <input
             placeholder="permiso1, permiso2, permiso3"
             className="border p-2 rounded w-full"
