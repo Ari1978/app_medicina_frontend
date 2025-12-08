@@ -4,9 +4,11 @@ import { useEffect, useState } from "react";
 import EmpresaSummary from "../components/EmpresaSumary";
 import { TurnoProvider } from "@/app/context/TurnoContext";
 
-// ✅ API dinámico (LOCAL + PRODUCCIÓN)
-const API_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api";
+// ✅ API dinámico (LOCAL + FLY)
+const API_URL = (
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api"
+).replace(/\/$/, ""); // 👈 evita doble slash
+
 
 export default function EmpresaLayout({ children }) {
   const [empresa, setEmpresa] = useState(null);

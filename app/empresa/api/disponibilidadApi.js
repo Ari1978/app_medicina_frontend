@@ -1,5 +1,8 @@
-const API_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api";
+// ✅ API dinámico (LOCAL + FLY)
+const API_URL = (
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api"
+).replace(/\/$/, ""); // 👈 evita doble slash
+
 
 export async function getDisponibilidad(fecha) {
   const url = `${API_URL}/empresa/disponibilidad?fecha=${encodeURIComponent(fecha)}`;

@@ -1,5 +1,7 @@
-const API_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api";
+// ✅ API dinámico (LOCAL + FLY)
+const API_URL = (
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api"
+).replace(/\/$/, ""); // 👈 evita doble slash
 
 export async function enviarTurnoEspecial(token, data) {
   const res = await fetch(

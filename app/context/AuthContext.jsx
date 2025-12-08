@@ -4,9 +4,10 @@ import { createContext, useEffect, useState } from "react";
 
 export const AuthContext = createContext(null);
 
-// ✅ API dinámico (Local + Producción)
-const API_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+/// ✅ API dinámico (LOCAL + FLY)
+const API_URL = (
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"
+).replace(/\/$/, ""); // 👈 evita doble slash
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);

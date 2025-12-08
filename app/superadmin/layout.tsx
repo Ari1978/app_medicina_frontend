@@ -4,7 +4,11 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
+// ✅ API dinámico (LOCAL + FLY)
+const API_URL = (
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api"
+).replace(/\/$/, ""); // 👈 evita doble slash
+
 
 export default function SuperAdminLayout({ children }) {
   const router = useRouter();
