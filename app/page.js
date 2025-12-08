@@ -44,7 +44,7 @@ export default function Home() {
           {/* CARD 1 */}
           <div className="bg-white shadow-lg rounded-xl p-6 hover:shadow-2xl transition">
             <img
-              src="https://images.unsplash.com/photo-1580281657661-3d0f20abf97a?auto=format&fit=crop&w=800&q=80"
+              src="https://www.asociartservicios.com.ar/wp-content/uploads/2025/10/examen-preocupacional.jpg.webp"
               className="rounded-lg mb-4 h-40 w-full object-cover"
             />
             <h4 className="text-xl font-bold mb-2">Exámenes Preocupacionales</h4>
