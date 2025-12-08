@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import TurnosList from "../../components/EmpresaTurnosList";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
+const API_URL =
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api";
 
 export default function TurnosPage() {
   const [turnos, setTurnos] = useState([]);

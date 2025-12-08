@@ -5,7 +5,8 @@ import EmpresaSummary from "../components/EmpresaSumary";
 import { TurnoProvider } from "@/app/context/TurnoContext";
 
 // ✅ API dinámico (LOCAL + PRODUCCIÓN)
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
+const API_URL =
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api";
 
 export default function EmpresaLayout({ children }) {
   const [empresa, setEmpresa] = useState(null);
