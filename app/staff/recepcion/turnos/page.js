@@ -2,10 +2,13 @@
 
 import { useEffect, useState } from "react";
 
-// ✅ API dinámico (LOCAL + FLY)
-const API_URL = (
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api"
-).replace(/\/$/, ""); // 👈 evita doble slash
+// ✅ SOLO PRODUCCIÓN / FLY (sin fallback a localhost)
+if (!process.env.NEXT_PUBLIC_API_URL) {
+  throw new Error("Falta NEXT_PUBLIC_API_URL en el entorno");
+}
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL.replace(/\/$/, "");
+
 
 export default function TurnosRecepcion() {
   const [turnos, setTurnos] = useState([]);
@@ -18,7 +21,7 @@ export default function TurnosRecepcion() {
       try {
         setLoading(true);
 
-        const res = await fetch(`${API_URL}/recepcion/turnos-hoy`, {
+        const res = await fetch(`${API_URL}/api/recepcion/turnos-hoy`, {
           credentials: "include",
         });
 
@@ -44,7 +47,7 @@ export default function TurnosRecepcion() {
     const buscar = async () => {
       try {
         const res = await fetch(
-          `${API_URL}/recepcion/buscar?query=${encodeURIComponent(busqueda)}`,
+          `${API_URL}/api/recepcion/buscar?query=${encodeURIComponent(busqueda)}`,
           { credentials: "include" }
         );
 
@@ -64,7 +67,7 @@ export default function TurnosRecepcion() {
   const confirmar = async (id) => {
     try {
       const res = await fetch(
-        `${API_URL}/recepcion/turnos/${id}/estado`,
+        `${API_URL}/api/recepcion/turnos/${id}/estado`,
         {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
@@ -143,7 +146,7 @@ export default function TurnosRecepcion() {
                 <td>
                   {t.estado === "confirmado" && (
                     <a
-                      href={`${API_URL}/recepcion/turnos/${t._id}/imprimir`}
+                      href={`${API_URL}/api/recepcion/turnos/${t._id}/imprimir`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-blue-600 underline"

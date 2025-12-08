@@ -1,12 +1,13 @@
-// ✅ API dinámico (LOCAL + FLY)
-const API_URL = (
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api"
-).replace(/\/$/, ""); // 👈 evita doble slash
+// ✅ SOLO PRODUCCIÓN / FLY (sin fallback a localhost)
+if (!process.env.NEXT_PUBLIC_API_URL) {
+  throw new Error("Falta NEXT_PUBLIC_API_URL en el entorno");
+}
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL.replace(/\/$/, "");
 
 export async function enviarAsesoramiento(token, data) {
   const res = await fetch(
-    `${API_URL}/empresa/formularios/asesoramiento`,
+    `${API_URL}/api/empresa/formularios/asesoramiento`,
     {
       method: "POST",
       credentials: "include", // ✅ necesario para la cookie

@@ -2,10 +2,12 @@
 
 import { useEffect, useState } from "react";
 
-// ✅ API dinámico (LOCAL + FLY)
-const API_URL = (
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api"
-).replace(/\/$/, ""); // 👈 evita doble slash
+// ✅ SOLO PRODUCCIÓN / FLY (sin fallback a localhost)
+if (!process.env.NEXT_PUBLIC_API_URL) {
+  throw new Error("Falta NEXT_PUBLIC_API_URL en el entorno");
+}
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL.replace(/\/$/, "");
 
 
 export default function TurnosHoy() {
@@ -18,7 +20,7 @@ export default function TurnosHoy() {
       try {
         setLoading(true);
 
-        const res = await fetch(`${API_URL}/recepcion/turnos-hoy`, {
+        const res = await fetch(`${API_URL}/api/recepcion/turnos-hoy`, {
           credentials: "include",
         });
 
@@ -41,7 +43,7 @@ export default function TurnosHoy() {
   const cambiarEstado = async (id, estado) => {
     try {
       const res = await fetch(
-        `${API_URL}/recepcion/turnos/${id}/estado`,
+        `${API_URL}/apirecepcion/turnos/${id}/estado`,
         {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },

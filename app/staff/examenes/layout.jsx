@@ -3,14 +3,17 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
-// ✅ API dinámico (LOCAL + FLY)
-const API_URL = (
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api"
-).replace(/\/$/, ""); // 👈 evita doble slash
+// ✅ SOLO PRODUCCIÓN / FLY (sin fallback a localhost)
+if (!process.env.NEXT_PUBLIC_API_URL) {
+  throw new Error("Falta NEXT_PUBLIC_API_URL en el entorno");
+}
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL.replace(/\/$/, "");
+
 
 
 export async function getDisponibilidad(fecha) {
-  const url = `${API_URL}/empresa/disponibilidad?fecha=${encodeURIComponent(fecha)}`;
+  const url = `${API_URL}/api/empresa/disponibilidad?fecha=${encodeURIComponent(fecha)}`;
 
   const res = await fetch(url, {
     method: "GET",
@@ -37,12 +40,12 @@ export default function ExamenesLayout({ children }) {
   useEffect(() => {
     async function fetchStaff() {
       try {
-        const res = await fetch(`${API_URL}/staff/auth/me`, {
+        const res = await fetch(`${API_URL}/api/staff/auth/me`, {
           credentials: "include",
         });
 
         if (!res.ok) {
-          router.push("/staff/login");
+          router.push("/staff-login");
           return;
         }
 
@@ -55,7 +58,7 @@ export default function ExamenesLayout({ children }) {
 
         setStaff(data);
       } catch (err) {
-        router.push("/staff/login");
+        router.push("/staff-login");
       } finally {
         setCargando(false);
       }
@@ -90,7 +93,7 @@ export default function ExamenesLayout({ children }) {
 
           <button
             onClick={async () => {
-              await fetch(`${API_URL}/staff/auth/logout`, {
+              await fetch(`${API_URL}/api/staff/auth/logout`, {
                 method: "POST",
                 credentials: "include",
               });

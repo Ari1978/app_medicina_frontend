@@ -13,14 +13,16 @@ import { Input } from "@/app/components/ui/input";
 import { Label } from "@/app/components/ui/label";
 import { Button } from "@/app/components/ui/button";
 
-// ✅ API dinámico (LOCAL + FLY)
-const API_URL = (
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api"
-).replace(/\/$/, ""); // 👈 evita doble slash
+// ✅ SOLO PRODUCCIÓN / FLY (sin fallback a localhost)
+if (!process.env.NEXT_PUBLIC_API_URL) {
+  throw new Error("Falta NEXT_PUBLIC_API_URL en el entorno");
+}
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL.replace(/\/$/, "");
 
 
 export async function getDisponibilidad(fecha) {
-  const url = `${API_URL}/empresa/disponibilidad?fecha=${encodeURIComponent(fecha)}`;
+  const url = `${API_URL}/api/empresa/disponibilidad?fecha=${encodeURIComponent(fecha)}`;
 
   const res = await fetch(url, {
     method: "GET",
@@ -52,7 +54,7 @@ export default function CambiarPasswordClient() {
 
   useEffect(() => {
     if (!empresaId) {
-      router.push("/empresa/login");
+      router.push("/empresa-login");
     }
   }, [empresaId, router]);
 
@@ -74,7 +76,7 @@ export default function CambiarPasswordClient() {
     }
 
     try {
-      const res = await fetch(`${API_URL}/empresa/cambiar-password`, {
+      const res = await fetch(`${API_URL}/api/empresa/cambiar-password`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -97,7 +99,7 @@ export default function CambiarPasswordClient() {
       setOk(true);
 
       setTimeout(() => {
-        router.push("/empresa/login");
+        router.push("/empresa-login");
       }, 2000);
     } catch (err) {
       setError("Error de conexión con el servidor");

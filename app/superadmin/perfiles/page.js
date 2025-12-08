@@ -3,10 +3,12 @@
 
 import { useEffect, useState } from "react";
 
-// ✅ API dinámico (LOCAL + FLY)
-const API_URL = (
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api"
-).replace(/\/$/, ""); // 👈 evita doble slash
+// ✅ SOLO PRODUCCIÓN / FLY (sin fallback a localhost)
+if (!process.env.NEXT_PUBLIC_API_URL) {
+  throw new Error("Falta NEXT_PUBLIC_API_URL en el entorno");
+}
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL.replace(/\/$/, "");
 
 
 export default function SuperAdminPerfilesPage() {
@@ -41,7 +43,7 @@ export default function SuperAdminPerfilesPage() {
   // ============================
 
   const cargarPerfiles = async () => {
-    const res = await fetch(`${API_URL}/perfil-examen`, {
+    const res = await fetch(`${API_URL}/api/perfil-examen`, {
       credentials: "include",
     });
 
@@ -51,7 +53,7 @@ export default function SuperAdminPerfilesPage() {
 
   const cargarEmpresas = async () => {
     const res = await fetch(
-      `${API_URL}/superadmin/empresas-finales`,
+      `${API_URL}/api/superadmin/empresas-finales`,
       { credentials: "include" }
     );
 
@@ -89,7 +91,7 @@ export default function SuperAdminPerfilesPage() {
       return;
     }
 
-    const res = await fetch(`${API_URL}/perfil-examen`, {
+    const res = await fetch(`${API_URL}/api/perfil-examen`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "include",
@@ -112,7 +114,7 @@ export default function SuperAdminPerfilesPage() {
     const ok = confirm("¿Eliminar este perfil?");
     if (!ok) return;
 
-    await fetch(`${API_URL}/perfil-examen/${id}`, {
+    await fetch(`${API_URL}/api/perfil-examen/${id}`, {
       method: "DELETE",
       credentials: "include",
     });

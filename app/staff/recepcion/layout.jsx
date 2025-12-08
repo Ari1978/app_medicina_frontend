@@ -3,10 +3,13 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
-// ✅ API dinámico (LOCAL + FLY)
-const API_URL = (
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api"
-).replace(/\/$/, ""); // 👈 evita doble slash
+// ✅ SOLO PRODUCCIÓN / FLY (sin fallback a localhost)
+if (!process.env.NEXT_PUBLIC_API_URL) {
+  throw new Error("Falta NEXT_PUBLIC_API_URL en el entorno");
+}
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL.replace(/\/$/, "");
+
 
 
 export default function RecepcionLayout({ children }) {
@@ -16,7 +19,7 @@ export default function RecepcionLayout({ children }) {
   useEffect(() => {
     async function check() {
       try {
-        const res = await fetch(`${API_URL}/staff/auth/me`, {
+        const res = await fetch(`${API_URL}/api/staff/auth/me`, {
           credentials: "include",
         });
 
@@ -57,7 +60,7 @@ export default function RecepcionLayout({ children }) {
 
           <button
             onClick={async () => {
-              await fetch(`${API_URL}/staff/auth/logout`, {
+              await fetch(`${API_URL}/api/staff/auth/logout`, {
                 method: "POST",
                 credentials: "include",
               });

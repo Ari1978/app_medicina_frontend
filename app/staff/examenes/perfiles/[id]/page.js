@@ -4,7 +4,12 @@
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
+// ✅ SOLO PRODUCCIÓN / FLY (sin fallback a localhost)
+if (!process.env.NEXT_PUBLIC_API_URL) {
+  throw new Error("Falta NEXT_PUBLIC_API_URL en el entorno");
+}
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL.replace(/\/$/, "");
 
 export default function EditarPerfil() {
   const router = useRouter();
@@ -24,7 +29,7 @@ export default function EditarPerfil() {
 
     const cargarPerfil = async () => {
       try {
-        const res = await fetch(`${API_URL}/perfil-examen/${id}`, {
+        const res = await fetch(`${API_URL}/api/perfil-examen/${id}`, {
           credentials: "include",
         });
 
@@ -60,7 +65,7 @@ export default function EditarPerfil() {
   // ✅ Guardar cambios
   const guardar = async () => {
     try {
-      await fetch(`${API_URL}/perfil-examen/${id}`, {
+      await fetch(`${API_URL}/api/perfil-examen/${id}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",

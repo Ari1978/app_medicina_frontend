@@ -2,10 +2,13 @@
 
 import { useEffect, useState } from "react";
 
-// ✅ API dinámico (LOCAL + FLY)
-const API_URL = (
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api"
-).replace(/\/$/, ""); // 👈 evita doble slash
+// ✅ SOLO PRODUCCIÓN / FLY (sin fallback a localhost)
+if (!process.env.NEXT_PUBLIC_API_URL) {
+  throw new Error("Falta NEXT_PUBLIC_API_URL en el entorno");
+}
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL.replace(/\/$/, "");
+
 
 export default function EmpresasAdminPage() {
   const [empresas, setEmpresas] = useState([]);
@@ -27,7 +30,7 @@ export default function EmpresasAdminPage() {
 
     try {
       const res = await fetch(
-        `${API_URL}/superadmin/empresas-finales`,
+        `${API_URL}/api/superadmin/empresas-finales`,
         { credentials: "include" }
       );
 
@@ -59,7 +62,7 @@ export default function EmpresasAdminPage() {
     if (!empresa?._id) return;
 
     const res = await fetch(
-      `${API_URL}/superadmin/empresas-finales/${empresa._id}`,
+      `${API_URL}/api/superadmin/empresas-finales/${empresa._id}`,
       {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -86,7 +89,7 @@ export default function EmpresasAdminPage() {
     }
 
     const res = await fetch(
-      `${API_URL}/superadmin/empresas-finales/${selected._id}/reset-password`,
+      `${API_URL}/api/superadmin/empresas-finales/${selected._id}/reset-password`,
       {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -115,7 +118,7 @@ export default function EmpresasAdminPage() {
     if (!ok) return;
 
     const res = await fetch(
-      `${API_URL}/superadmin/empresas-finales/${id}`,
+      `${API_URL}/api/superadmin/empresas-finales/${id}`,
       {
         method: "DELETE",
         credentials: "include",

@@ -3,10 +3,13 @@
 
 import { useEffect, useState } from "react";
 
-// ✅ API dinámico (LOCAL + FLY)
-const API_URL = (
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api"
-).replace(/\/$/, ""); // 👈 evita doble slash
+// ✅ SOLO PRODUCCIÓN / FLY (sin fallback a localhost)
+if (!process.env.NEXT_PUBLIC_API_URL) {
+  throw new Error("Falta NEXT_PUBLIC_API_URL en el entorno");
+}
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL.replace(/\/$/, "");
+
 
 
 export default function AdminAdminPage() {
@@ -43,7 +46,7 @@ export default function AdminAdminPage() {
     setLoading(true);
 
     try {
-      const res = await fetch(`${API_URL}/superadmin/admins`, {
+      const res = await fetch(`${API_URL}/api/superadmin/admins`, {
         credentials: "include",
       });
 
@@ -77,7 +80,7 @@ export default function AdminAdminPage() {
       return;
     }
 
-    const res = await fetch(`${API_URL}/superadmin/admins`, {
+    const res = await fetch(`${API_URL}/api/superadmin/admins`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "include",
@@ -100,7 +103,7 @@ export default function AdminAdminPage() {
     if (!selected?._id) return;
 
     const res = await fetch(
-      `${API_URL}/superadmin/admins/${selected._id}`,
+      `${API_URL}/api/superadmin/admins/${selected._id}`,
       {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -129,7 +132,7 @@ export default function AdminAdminPage() {
     }
 
     const res = await fetch(
-      `${API_URL}/superadmin/admins/${selected._id}/reset-password`,
+      `${API_URL}/apisuperadmin/admins/${selected._id}/reset-password`,
       {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -160,7 +163,7 @@ export default function AdminAdminPage() {
       .filter(Boolean);
 
     const res = await fetch(
-      `${API_URL}/superadmin/admins/${selected._id}/permisos`,
+      `${API_URL}/api/superadmin/admins/${selected._id}/permisos`,
       {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -189,7 +192,7 @@ export default function AdminAdminPage() {
     if (!ok) return;
 
     const res = await fetch(
-      `${API_URL}/superadmin/admins/${id}`,
+      `${API_URL}/api/superadmin/admins/${id}`,
       {
         method: "DELETE",
         credentials: "include",

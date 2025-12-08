@@ -2,10 +2,13 @@
 
 import { useState } from "react";
 
-// ✅ API dinámico (LOCAL + FLY)
-const API_URL = (
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api"
-).replace(/\/$/, ""); // 👈 evita doble slash
+// ✅ SOLO PRODUCCIÓN / FLY (sin fallback a localhost)
+if (!process.env.NEXT_PUBLIC_API_URL) {
+  throw new Error("Falta NEXT_PUBLIC_API_URL en el entorno");
+}
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL.replace(/\/$/, "");
+
 
 
 export default function ImportarEmpresasPage() {
@@ -29,7 +32,7 @@ export default function ImportarEmpresasPage() {
 
     try {
       const res = await fetch(
-        `${API_URL}/superadmin/empresas/import`,
+        `${API_URL}/api/superadmin/empresas/import`,
         {
           method: "POST",
           credentials: "include",

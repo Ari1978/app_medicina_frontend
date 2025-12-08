@@ -68,20 +68,13 @@ export default function Navbar() {
             </Link>
 
             <Link
-              href="/empresa/login"
+              href="/empresa-login"
               onClick={() => setOpen(false)}
               className="bg-blue-700 text-white text-center py-2 rounded-lg shadow"
             >
               Ingreso Clientes
             </Link>
 
-            <Link
-              href="/staff/login"
-              onClick={() => setOpen(false)}
-              className="border text-center py-2 rounded-lg"
-            >
-              Staff
-            </Link>
           </div>
         </nav>
       </div>

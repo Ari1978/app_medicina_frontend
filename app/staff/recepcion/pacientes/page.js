@@ -2,10 +2,13 @@
 
 import { useEffect, useState } from "react";
 
-// ✅ API dinámico (LOCAL + FLY)
-const API_URL = (
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api"
-).replace(/\/$/, ""); // 👈 evita doble slash
+// ✅ SOLO PRODUCCIÓN / FLY (sin fallback a localhost)
+if (!process.env.NEXT_PUBLIC_API_URL) {
+  throw new Error("Falta NEXT_PUBLIC_API_URL en el entorno");
+}
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL.replace(/\/$/, "");
+
 
 
 export default function NuevoPacientePage() {
@@ -45,7 +48,7 @@ export default function NuevoPacientePage() {
     const buscar = async () => {
       try {
         const res = await fetch(
-          `${API_URL}/empresa/buscar?query=${encodeURIComponent(busquedaEmpresa)}`,
+          `${API_URL}/api/empresa/buscar?query=${encodeURIComponent(busquedaEmpresa)}`,
           { credentials: "include" }
         );
 
@@ -90,7 +93,7 @@ export default function NuevoPacientePage() {
     setLoading(true);
 
     try {
-      const res = await fetch(`${API_URL}/recepcion/pacientes`, {
+      const res = await fetch(`${API_URL}/api/recepcion/pacientes`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",

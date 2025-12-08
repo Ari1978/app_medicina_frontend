@@ -3,6 +3,9 @@
 import { useState } from "react";
 import { crearTurno } from "@/app/empresa/api/turnosApi";
 
+// ✅ API dinámico (local + Fly)
+const API_URL = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "");
+
 export default function Paso6Confirmacion({ form, back }) {
   const [loading, setLoading] = useState(false);
   const [ok, setOk] = useState(false);
@@ -47,7 +50,7 @@ export default function Paso6Confirmacion({ form, back }) {
         ------------------------------ */}
         {turno && (
           <a
-            href={`http://localhost:4000/api/empresa/turnos/${turno._id}/pdf`}
+            href={`${API_URL}/api/empresa/turnos/${turno._id}/pdf`}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-block bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold shadow transition"

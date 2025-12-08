@@ -3,10 +3,12 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
-// ✅ API dinámico (LOCAL + FLY)
-const API_URL = (
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api"
-).replace(/\/$/, ""); // 👈 evita doble slash
+// ✅ SOLO PRODUCCIÓN / FLY (sin fallback a localhost)
+if (!process.env.NEXT_PUBLIC_API_URL) {
+  throw new Error("Falta NEXT_PUBLIC_API_URL en el entorno");
+}
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL.replace(/\/$/, "");
 
 
 const ESTUDIOS_DISPONIBLES = [
@@ -33,7 +35,7 @@ export default function NuevoPerfilPage() {
   useEffect(() => {
     async function cargarEmpresas() {
       try {
-        const res = await fetch(`${API_URL}/empresa`, {
+        const res = await fetch(`${API_URL}/api/empresa`, {
           credentials: "include",
         });
 
@@ -79,7 +81,7 @@ export default function NuevoPerfilPage() {
     setLoading(true);
 
     try {
-      const res = await fetch(`${API_URL}/perfil-examen`, {
+      const res = await fetch(`${API_URL}/api/perfil-examen`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",

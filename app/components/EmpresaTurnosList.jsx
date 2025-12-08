@@ -1,9 +1,11 @@
 "use client";
 
-// ✅ API dinámico (LOCAL + FLY)
-const API_URL = (
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api"
-).replace(/\/$/, ""); // 👈 evita doble slash
+/// ✅ SOLO PRODUCCIÓN / FLY (sin fallback a localhost)
+if (!process.env.NEXT_PUBLIC_API_URL) {
+  throw new Error("Falta NEXT_PUBLIC_API_URL en el entorno");
+}
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL.replace(/\/$/, "");
 
 function puedeCancelar(turno) {
   const ahora = new Date();
@@ -20,7 +22,7 @@ function puedeCancelar(turno) {
 
 async function cancelarTurno(id) {
   try {
-    const resp = await fetch(`${API_URL}/empresa/turnos/${id}/cancelar`, {
+    const resp = await fetch(`${API_URL}/api/empresa/turnos/${id}/cancelar`, {
       method: "PATCH",
       credentials: "include",
     });

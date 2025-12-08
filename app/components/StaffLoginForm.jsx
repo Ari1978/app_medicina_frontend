@@ -3,14 +3,15 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-// ✅ API dinámico (LOCAL + FLY)
-const API_URL = (
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api"
-).replace(/\/$/, ""); // 👈 evita doble slash
+// ✅ SOLO PRODUCCIÓN / FLY (sin fallback a localhost)
+if (!process.env.NEXT_PUBLIC_API_URL) {
+  throw new Error("Falta NEXT_PUBLIC_API_URL en el entorno");
+}
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL.replace(/\/$/, "");
 
 export async function getDisponibilidad(fecha) {
-  const url = `${API_URL}/empresa/disponibilidad?fecha=${encodeURIComponent(fecha)}`;
+  const url = `${API_URL}/api/empresa/disponibilidad?fecha=${encodeURIComponent(fecha)}`;
 
   const res = await fetch(url, {
     method: "GET",
@@ -54,7 +55,7 @@ export default function StaffLoginForm() {
     setError("");
 
     try {
-      const res = await fetch(`${API_URL}/staff/auth/login`, {
+      const res = await fetch(`${API_URL}/api/staff/auth/login`, {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },

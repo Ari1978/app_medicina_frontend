@@ -3,10 +3,12 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-// ✅ API dinámico (LOCAL + FLY)
-const API_URL = (
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api"
-).replace(/\/$/, ""); // 👈 evita doble slash
+// ✅ SOLO PRODUCCIÓN / FLY (sin fallback a localhost)
+if (!process.env.NEXT_PUBLIC_API_URL) {
+  throw new Error("Falta NEXT_PUBLIC_API_URL en el entorno");
+}
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL.replace(/\/$/, "");
 
 
 export default function SuperAdminLoginPage() {
@@ -31,7 +33,7 @@ export default function SuperAdminLoginPage() {
     setLoading(true);
 
     try {
-      const res = await fetch(`${API_URL}/superadmin/login`, {
+      const res = await fetch(`${API_URL}/api/superadmin/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -2,10 +2,13 @@
 
 import { useEffect, useState } from "react";
 
-// ✅ API dinámico (LOCAL + FLY)
-const API_URL = (
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api"
-).replace(/\/$/, ""); // 👈 evita doble slash
+// ✅ SOLO PRODUCCIÓN / FLY (sin fallback a localhost)
+if (!process.env.NEXT_PUBLIC_API_URL) {
+  throw new Error("Falta NEXT_PUBLIC_API_URL en el entorno");
+}
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL.replace(/\/$/, "");
+
 
 
 export default function SuperAdminSedesPage() {
@@ -40,7 +43,7 @@ export default function SuperAdminSedesPage() {
   // ============================
 
   const cargarProvincias = async () => {
-    const res = await fetch(`${API_URL}/geo/provincias`);
+    const res = await fetch(`${API_URL}/api/geo/provincias`);
     const data = await res.json();
     setProvincias(Array.isArray(data) ? data : []);
   };
@@ -49,7 +52,7 @@ export default function SuperAdminSedesPage() {
     if (!provincia) return;
 
     const res = await fetch(
-      `${API_URL}/geo/partidos?provincia=${provincia}`
+      `${API_URL}/api/geo/partidos?provincia=${provincia}`
     );
     const data = await res.json();
     setPartidos(Array.isArray(data) ? data : []);
@@ -59,7 +62,7 @@ export default function SuperAdminSedesPage() {
     if (!provincia || !partido) return;
 
     const res = await fetch(
-      `${API_URL}/geo/localidades?provincia=${provincia}&partido=${partido}`
+      `${API_URL}/api/geo/localidades?provincia=${provincia}&partido=${partido}`
     );
     const data = await res.json();
     setLocalidades(Array.isArray(data) ? data : []);
@@ -72,7 +75,7 @@ export default function SuperAdminSedesPage() {
   const cargarSedes = async () => {
     setLoading(true);
 
-    const res = await fetch(`${API_URL}/superadmin/sedes`, {
+    const res = await fetch(`${API_URL}/api/superadmin/sedes`, {
       credentials: "include",
     });
 
@@ -104,7 +107,7 @@ export default function SuperAdminSedesPage() {
       return;
     }
 
-    const res = await fetch(`${API_URL}/superadmin/sedes`, {
+    const res = await fetch(`${API_URL}/api/superadmin/sedes`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "include",
@@ -131,7 +134,7 @@ export default function SuperAdminSedesPage() {
     if (!selected?._id) return;
 
     const res = await fetch(
-      `${API_URL}/superadmin/sedes/${selected._id}`,
+      `${API_URL}/apisuperadmin/sedes/${selected._id}`,
       {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -161,7 +164,7 @@ export default function SuperAdminSedesPage() {
     if (!ok) return;
 
     const res = await fetch(
-      `${API_URL}/superadmin/sedes/${id}`,
+      `${API_URL}/api/superadmin/sedes/${id}`,
       {
         method: "DELETE",
         credentials: "include",

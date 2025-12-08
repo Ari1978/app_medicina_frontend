@@ -4,17 +4,20 @@ import { createContext, useEffect, useState } from "react";
 
 export const AuthContext = createContext(null);
 
-/// ✅ API dinámico (LOCAL + FLY)
-const API_URL = (
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"
-).replace(/\/$/, ""); // 👈 evita doble slash
+// ✅ SOLO PRODUCCIÓN / FLY (sin fallback a localhost)
+if (!process.env.NEXT_PUBLIC_API_URL) {
+  throw new Error("Falta NEXT_PUBLIC_API_URL en el entorno");
+}
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL.replace(/\/$/, "");
+console.log("🔥 API_URL COMPILADO:", API_URL);
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [role, setRole] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // ✅ SESIÓN AUTOMÁTICA (LOCAL + PRODUCCIÓN)
+  // ✅ SESIÓN AUTOMÁTICA (PRODUCCIÓN)
   useEffect(() => {
     if (typeof window === "undefined") return;
 
@@ -52,7 +55,7 @@ export function AuthProvider({ children }) {
     checkSession();
   }, []);
 
-  // ✅ LOGIN UNIFICADO (CON SOPORTE mustChangePassword)
+  // ✅ LOGIN UNIFICADO
   const login = async (role, credentials) => {
     const urls = {
       empresa: `${API_URL}/api/empresa/login`,
@@ -73,7 +76,7 @@ export function AuthProvider({ children }) {
 
       if (!res.ok) throw new Error(data.message || "Login inválido");
 
-      // ✅ PRIMER ACCESO EMPRESA (NO CREA SESIÓN)
+      // ✅ PRIMER ACCESO EMPRESA
       if (data.mustChangePassword) {
         return {
           ok: true,

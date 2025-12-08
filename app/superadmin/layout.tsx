@@ -4,17 +4,20 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
-// ✅ API dinámico (LOCAL + FLY)
-const API_URL = (
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api"
-).replace(/\/$/, ""); // 👈 evita doble slash
+// ✅ SOLO PRODUCCIÓN / FLY (sin fallback a localhost)
+if (!process.env.NEXT_PUBLIC_API_URL) {
+  throw new Error("Falta NEXT_PUBLIC_API_URL en el entorno");
+}
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL.replace(/\/$/, "");
+
 
 
 export default function SuperAdminLayout({ children }) {
   const router = useRouter();
 
   useEffect(() => {
-    fetch(`${API_URL}/superadmin/me`, {
+    fetch(`${API_URL}/api/superadmin/me`, {
       credentials: "include",
     })
       .then((res) => {
@@ -35,7 +38,7 @@ export default function SuperAdminLayout({ children }) {
   // ✅ LOGOUT DIRECTO (LOCAL + PROD)
   const handleLogout = async () => {
     try {
-      await fetch(`${API_URL}/superadmin/auth/logout`, {
+      await fetch(`${API_URL}/api/superadmin/auth/logout`, {
         method: "POST",
         credentials: "include",
       });

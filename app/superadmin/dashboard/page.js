@@ -3,10 +3,13 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 
-// ✅ API dinámico (LOCAL + FLY)
-const API_URL = (
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api"
-).replace(/\/$/, ""); // 👈 evita doble slash
+// ✅ SOLO PRODUCCIÓN / FLY (sin fallback a localhost)
+if (!process.env.NEXT_PUBLIC_API_URL) {
+  throw new Error("Falta NEXT_PUBLIC_API_URL en el entorno");
+}
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL.replace(/\/$/, "");
+
 
 export default function SuperAdminDashboard() {
   const [stats, setStats] = useState(null);
@@ -14,7 +17,7 @@ export default function SuperAdminDashboard() {
 
   const cargarStats = async () => {
     try {
-      const res = await fetch(`${API_URL}/superadmin/stats`, {
+      const res = await fetch(`${API_URL}/api/superadmin/stats`, {
         credentials: "include",
       });
 

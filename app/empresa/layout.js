@@ -4,17 +4,18 @@ import { useEffect, useState } from "react";
 import EmpresaSummary from "../components/EmpresaSumary";
 import { TurnoProvider } from "@/app/context/TurnoContext";
 
-// ✅ API dinámico (LOCAL + FLY)
-const API_URL = (
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api"
-).replace(/\/$/, ""); // 👈 evita doble slash
+// ✅ SOLO PRODUCCIÓN / FLY (sin fallback a localhost)
+if (!process.env.NEXT_PUBLIC_API_URL) {
+  throw new Error("Falta NEXT_PUBLIC_API_URL en el entorno");
+}
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL.replace(/\/$/, "");
 
 export default function EmpresaLayout({ children }) {
   const [empresa, setEmpresa] = useState(null);
 
   useEffect(() => {
-    fetch(`${API_URL}/empresa/me`, {
+    fetch(`${API_URL}/api/empresa/me`, {
       credentials: "include",
     })
       .then((res) => {
@@ -32,7 +33,7 @@ export default function EmpresaLayout({ children }) {
         <button
           onClick={async () => {
             try {
-              await fetch(`${API_URL}/empresa/logout`, {
+              await fetch(`${API_URL}/api/empresa/logout`, {
                 method: "POST",
                 credentials: "include",
               });
@@ -42,15 +43,7 @@ export default function EmpresaLayout({ children }) {
               console.error("Error al cerrar sesión", err);
             }
           }}
-          className="
-            fixed sm:absolute
-            top-2 sm:top-4
-            right-2 sm:right-4
-            bg-red-600 hover:bg-red-700 text-white
-            px-3 py-1 sm:px-4 sm:py-2
-            rounded-lg font-semibold shadow z-50
-            text-sm
-          "
+          className="fixed sm:absolute top-2 sm:top-4 right-2 sm:right-4 bg-red-600 hover:bg-red-700 text-white px-3 py-1 sm:px-4 sm:py-2 rounded-lg font-semibold shadow z-50 text-sm"
         >
           Cerrar sesión
         </button>
