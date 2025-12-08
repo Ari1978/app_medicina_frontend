@@ -6,22 +6,25 @@ if (!process.env.NEXT_PUBLIC_API_URL) {
 const API_URL = process.env.NEXT_PUBLIC_API_URL.replace(/\/$/, "");
 
 export async function enviarVisita(token, data) {
+  // ✅ NUNCA más agregamos empresaId
   const res = await fetch(
-    `${API_URL}/empresa/formularios/visita`,
+    `${API_URL}/api/empresa/formularios/visita`,
     {
       method: "POST",
-      credentials: "include", // ✅ cookies en local y producción
+      credentials: "include", // ✅ cookie
       headers: {
         "Content-Type": "application/json",
-        Authorization: token ? `Bearer ${token}` : undefined, // ✅ JWT opcional
       },
-      body: JSON.stringify(data),
+      body: JSON.stringify(data), // ✅ SOLO LOS CAMPOS DEL DTO
     }
   );
 
   if (!res.ok) {
-    throw new Error("Error al enviar solicitud");
+    const error = await res.text();
+    console.error("🔥 ERROR BACK:", error);
+    throw new Error(error);
   }
 
   return res.json();
 }
+

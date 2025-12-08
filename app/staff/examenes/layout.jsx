@@ -98,7 +98,7 @@ export default function ExamenesLayout({ children }) {
                 credentials: "include",
               });
 
-              router.push("/staff/login");
+              router.push("/staff-login");
             }}
             className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-semibold shadow transition"
           >

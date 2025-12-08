@@ -20,9 +20,10 @@ if (!process.env.NEXT_PUBLIC_API_URL) {
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL.replace(/\/$/, "");
 
-
 export async function getDisponibilidad(fecha) {
-  const url = `${API_URL}/api/empresa/disponibilidad?fecha=${encodeURIComponent(fecha)}`;
+  const url = `${API_URL}/api/empresa/disponibilidad?fecha=${encodeURIComponent(
+    fecha
+  )}`;
 
   const res = await fetch(url, {
     method: "GET",
@@ -39,7 +40,6 @@ export async function getDisponibilidad(fecha) {
 
   return res.json();
 }
-
 
 export default function CambiarPasswordClient() {
   const router = useRouter();
@@ -85,6 +85,7 @@ export default function CambiarPasswordClient() {
         body: JSON.stringify({
           empresaId,
           password,
+          repetirPassword, // ✅ ESTA ERA LA QUE FALTABA
         }),
       });
 
@@ -107,56 +108,70 @@ export default function CambiarPasswordClient() {
       setLoading(false);
     }
   };
+return (
+  <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-blue-50 to-blue-100 px-4">
+    <Card className="w-full max-w-md bg-white shadow-2xl rounded-2xl border">
+      <CardHeader className="pb-2">
+        <CardTitle className="text-2xl font-bold text-center text-gray-800">
+          Cambio de contraseña
+        </CardTitle>
+        <p className="text-sm text-gray-500 text-center mt-1">
+          Definí tu nueva contraseña para continuar
+        </p>
+      </CardHeader>
 
-  return (
-    <div className="flex justify-center pt-10 min-h-screen bg-linear-to-br from-blue-50 to-blue-100 px-4">
-      <Card className="w-full max-w-md bg-white shadow-xl rounded-xl">
-        <CardHeader>
-          <CardTitle className="text-xl font-bold text-center">
-            Cambio de contraseña
-          </CardTitle>
-        </CardHeader>
-
-        <CardContent>
-          {ok ? (
-            <div className="bg-green-100 text-green-700 text-sm p-4 rounded text-center">
-              Contraseña actualizada. Redirigiendo...
+      <CardContent>
+        {ok ? (
+          <div className="bg-green-100 text-green-700 text-sm p-4 rounded-lg text-center font-semibold">
+            Contraseña actualizada correctamente.  
+            Redirigiendo al login...
+          </div>
+        ) : (
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <div className="space-y-1">
+              <Label className="text-sm font-semibold text-gray-700">
+                Nueva contraseña
+              </Label>
+              <Input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                className="focus:ring-2 focus:ring-blue-500"
+              />
             </div>
-          ) : (
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <Label>Nueva contraseña</Label>
-                <Input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                />
+
+            <div className="space-y-1">
+              <Label className="text-sm font-semibold text-gray-700">
+                Repetir contraseña
+              </Label>
+              <Input
+                type="password"
+                value={repetirPassword}
+                onChange={(e) => setRepetirPassword(e.target.value)}
+                required
+                className="focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+
+            {error && (
+              <div className="bg-red-100 text-red-700 p-3 rounded-lg text-sm text-center font-semibold">
+                {error}
               </div>
+            )}
 
-              <div>
-                <Label>Repetir contraseña</Label>
-                <Input
-                  type="password"
-                  value={repetirPassword}
-                  onChange={(e) => setRepetirPassword(e.target.value)}
-                  required
-                />
-              </div>
+            <Button
+              type="submit"
+              disabled={loading}
+              className="w-full py-3 text-base font-bold bg-linear-to-r from-blue-700 to-blue-600 hover:from-blue-800 hover:to-blue-700 transition shadow-lg"
+            >
+              {loading ? "Guardando..." : "Actualizar contraseña"}
+            </Button>
+          </form>
+        )}
+      </CardContent>
+    </Card>
+  </div>
+);
 
-              {error && (
-                <div className="bg-red-100 text-red-600 p-2 rounded text-sm text-center">
-                  {error}
-                </div>
-              )}
-
-              <Button type="submit" disabled={loading} className="w-full">
-                {loading ? "Guardando..." : "Actualizar contraseña"}
-              </Button>
-            </form>
-          )}
-        </CardContent>
-      </Card>
-    </div>
-  );
 }

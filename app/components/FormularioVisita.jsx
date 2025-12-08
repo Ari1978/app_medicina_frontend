@@ -1,21 +1,22 @@
 "use client";
 
-import { useState } from "react";
-import { enviarVisita } from "@/app/empresa/api/vistasApi";
+import { useEffect, useState } from "react";
+import { enviarVisita } from "../empresa/api/visitasApi";
 
-// -----------------------------------------------------
-// 🎯 DATA: Zonas -> Localidades
-// -----------------------------------------------------
-const ZONAS = {
-  "CABA": ["Palermo", "Recoleta", "Belgrano", "Caballito", "Flores"],
-  "Zona Norte": ["San Isidro", "Vicente López", "Tigre", "San Fernando"],
-  "Zona Sur": ["Avellaneda", "Lanús", "Lomas de Zamora", "Quilmes"],
-  "Zona Oeste": ["Morón", "Ituzaingó", "Merlo", "Moreno"],
-};
+// ✅ SOLO PRODUCCIÓN
+if (!process.env.NEXT_PUBLIC_API_URL) {
+  throw new Error("Falta NEXT_PUBLIC_API_URL en el entorno");
+}
+const API_URL = process.env.NEXT_PUBLIC_API_URL.replace(/\/$/, "");
 
 export default function FormularioVisita() {
   const [loading, setLoading] = useState(false);
   const [ok, setOk] = useState(false);
+
+  // ✅ GEO DESDE BACK
+  const [provincias, setProvincias] = useState([]);
+  const [partidos, setPartidos] = useState([]);
+  const [localidades, setLocalidades] = useState([]);
 
   const [form, setForm] = useState({
     empleadoApellido: "",
@@ -23,34 +24,131 @@ export default function FormularioVisita() {
     empleadoDni: "",
     puesto: "",
     direccion: "",
-    zona: "",
+    provincia: "",
+    partido: "",
     localidad: "",
     motivo: "",
     solicitanteNombre: "",
     solicitanteCelular: "",
   });
 
-  const handleChange = (e) =>
-    setForm({ ...form, [e.target.name]: e.target.value });
+  // -----------------------------
+  // ✅ CARGAR PROVINCIAS
+  // -----------------------------
+  useEffect(() => {
+    async function fetchProvincias() {
+      const res = await fetch(`${API_URL}/api/geo/provincias`);
+      const data = await res.json();
+      setProvincias(data);
+    }
+    fetchProvincias();
+  }, []);
 
+  // -----------------------------
+  // ✅ CARGAR PARTIDOS
+  // -----------------------------
+  useEffect(() => {
+    if (!form.provincia) return;
+
+    async function fetchPartidos() {
+      const res = await fetch(
+        `${API_URL}/api/geo/partidos?provincia=${encodeURIComponent(
+          form.provincia
+        )}`
+      );
+      const data = await res.json();
+      setPartidos(data);
+    }
+
+    fetchPartidos();
+    setLocalidades([]);
+  }, [form.provincia]);
+
+  // -----------------------------
+  // ✅ CARGAR LOCALIDADES
+  // -----------------------------
+  useEffect(() => {
+    if (!form.provincia || !form.partido) return;
+
+    async function fetchLocalidades() {
+      const res = await fetch(
+        `${API_URL}/api/geo/localidades?provincia=${encodeURIComponent(
+          form.provincia
+        )}&partido=${encodeURIComponent(form.partido)}`
+      );
+      const data = await res.json();
+      setLocalidades(data);
+    }
+
+    fetchLocalidades();
+  }, [form.provincia, form.partido]);
+
+  // -----------------------------
+  // ✅ VALIDACIONES
+  // -----------------------------
+  const soloLetras = (v) => v.replace(/[^a-zA-ZÁÉÍÓÚÑáéíóúñ\s]/g, "");
+  const soloNumeros = (v) => v.replace(/\D/g, "");
+  const letrasYNumeros = (v) =>
+    v.replace(/[^a-zA-Z0-9ÁÉÍÓÚÑáéíóúñ\s]/g, "");
+
+  const handleChange = (e) => {
+    let { name, value } = e.target;
+
+    if (
+      ["empleadoApellido", "empleadoNombre", "puesto", "solicitanteNombre"].includes(
+        name
+      )
+    ) {
+      value = soloLetras(value);
+    }
+
+    if (["empleadoDni", "solicitanteCelular"].includes(name)) {
+      value = soloNumeros(value);
+    }
+
+    if (name === "direccion") {
+      value = letrasYNumeros(value);
+    }
+
+    setForm({ ...form, [name]: value });
+  };
+
+  // -----------------------------
+  // ✅ ENVIAR (BODY LIMPIO SIN empresaId)
+  // -----------------------------
   const enviar = async () => {
     setLoading(true);
 
     try {
-      const response = await enviarVisita(null, form);
-      console.log(response);
+      const bodyLimpio = {
+        empleadoApellido: form.empleadoApellido,
+        empleadoNombre: form.empleadoNombre,
+        empleadoDni: form.empleadoDni,
+        puesto: form.puesto,
+        direccion: form.direccion,
+        provincia: form.provincia,
+        partido: form.partido,
+        localidad: form.localidad,
+        motivo: form.motivo,
+        solicitanteNombre: form.solicitanteNombre,
+        solicitanteCelular: form.solicitanteCelular,
+      };
+
+      console.log("✅ BODY FINAL:", bodyLimpio);
+
+      await enviarVisita(null, bodyLimpio);
       setOk(true);
     } catch (err) {
       alert("Error al enviar solicitud");
-      console.error(err);
+      console.error("🔥 ERROR REAL:", err.message);
     } finally {
       setLoading(false);
     }
   };
 
-  // -----------------------------------------------------
-  // 🎉 PANTALLA DE ÉXITO
-  // -----------------------------------------------------
+  // -----------------------------
+  // ✅ ÉXITO
+  // -----------------------------
   if (ok) {
     return (
       <div className="text-center py-12 space-y-6">
@@ -71,9 +169,9 @@ export default function FormularioVisita() {
     );
   }
 
-  // -----------------------------------------------------
-  // 🧩 INPUT STYLE (uniforme al de turnos)
-  // -----------------------------------------------------
+  // -----------------------------
+  // ✅ ESTILOS
+  // -----------------------------
   const baseInput =
     "w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white shadow-sm";
 
@@ -83,120 +181,58 @@ export default function FormularioVisita() {
         Solicitud de Visita Médica
       </h1>
 
-      {/* EMPLEADO */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <input
-          className={baseInput}
-          name="empleadoApellido"
-          placeholder="Apellido del empleado"
-          onChange={handleChange}
-        />
-        <input
-          className={baseInput}
-          name="empleadoNombre"
-          placeholder="Nombre del empleado"
-          onChange={handleChange}
-        />
-        <input
-          className={baseInput}
-          name="empleadoDni"
-          placeholder="DNI"
-          onChange={handleChange}
-        />
-        <input
-          className={baseInput}
-          name="puesto"
-          placeholder="Puesto (opcional)"
-          onChange={handleChange}
-        />
+        <input className={baseInput} name="empleadoApellido" placeholder="Apellido" value={form.empleadoApellido} onChange={handleChange} />
+        <input className={baseInput} name="empleadoNombre" placeholder="Nombre" value={form.empleadoNombre} onChange={handleChange} />
+        <input className={baseInput} name="empleadoDni" placeholder="DNI" value={form.empleadoDni} onChange={handleChange} />
+        <input className={baseInput} name="puesto" placeholder="Puesto" value={form.puesto} onChange={handleChange} />
       </div>
 
-      {/* ZONA / LOCALIDAD */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {/* ZONA */}
-        <select
-          className={baseInput}
-          name="zona"
-          value={form.zona}
-          onChange={(e) => {
-            setForm({
-              ...form,
-              zona: e.target.value,
-              localidad: "",
-            });
-          }}
-        >
-          <option value="">Seleccione zona</option>
-          {Object.keys(ZONAS).map((zona) => (
-            <option key={zona} value={zona}>
-              {zona}
-            </option>
-          ))}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <select className={baseInput} value={form.provincia} onChange={(e) => setForm({ ...form, provincia: e.target.value, partido: "", localidad: "" })}>
+          <option value="">Provincia</option>
+          {provincias.map((p, i) => {
+            const value = typeof p === "string" ? p : p.nombre;
+            const key = typeof p === "string" ? p : p._id || i;
+            return <option key={key} value={value}>{value}</option>;
+          })}
         </select>
 
-        {/* LOCALIDAD */}
-        <select
-          className={baseInput}
-          name="localidad"
-          value={form.localidad}
-          onChange={handleChange}
-          disabled={!form.zona}
-        >
-          <option value="">Seleccione localidad</option>
+        <select className={baseInput} value={form.partido} disabled={!form.provincia} onChange={(e) => setForm({ ...form, partido: e.target.value, localidad: "" })}>
+          <option value="">Partido</option>
+          {partidos.map((p, i) => {
+            const value = typeof p === "string" ? p : p.nombre;
+            const key = typeof p === "string" ? p : p._id || i;
+            return <option key={key} value={value}>{value}</option>;
+          })}
+        </select>
 
-          {form.zona &&
-            ZONAS[form.zona].map((loc) => (
-              <option key={loc} value={loc}>
-                {loc}
-              </option>
-            ))}
+        <select className={baseInput} value={form.localidad} disabled={!form.partido} name="localidad" onChange={handleChange}>
+          <option value="">Localidad</option>
+          {localidades.map((l, i) => {
+            const value = typeof l === "string" ? l : l.nombre;
+            const key = typeof l === "string" ? l : l._id || i;
+            return <option key={key} value={value}>{value}</option>;
+          })}
         </select>
       </div>
 
-      {/* DIRECCIÓN */}
-      <input
-        className={baseInput}
-        name="direccion"
-        placeholder="Dirección donde se realizará la visita"
-        onChange={handleChange}
-      />
+      <input className={baseInput} name="direccion" placeholder="Dirección" value={form.direccion} onChange={handleChange} />
 
-      {/* MOTIVO */}
-      <textarea
-        className={`${baseInput} h-28 resize-none`}
-        name="motivo"
-        placeholder="Describa el motivo de la visita"
-        onChange={handleChange}
-      />
+      <textarea className={`${baseInput} h-28 resize-none`} name="motivo" placeholder="Describa el motivo" value={form.motivo} onChange={(e) => setForm({ ...form, motivo: e.target.value })} />
 
-      {/* SOLICITANTE */}
-      <h2 className="text-xl font-semibold text-gray-700 pt-2">
-        Datos del solicitante
-      </h2>
+      <h2 className="text-xl font-semibold text-gray-700 pt-2">Datos del solicitante</h2>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <input
-          className={baseInput}
-          name="solicitanteNombre"
-          placeholder="Nombre del solicitante"
-          onChange={handleChange}
-        />
-        <input
-          className={baseInput}
-          name="solicitanteCelular"
-          placeholder="Celular del solicitante"
-          onChange={handleChange}
-        />
+        <input className={baseInput} name="solicitanteNombre" placeholder="Nombre" value={form.solicitanteNombre} onChange={handleChange} />
+        <input className={baseInput} name="solicitanteCelular" placeholder="Celular" value={form.solicitanteCelular} onChange={handleChange} />
       </div>
 
-      {/* BOTÓN */}
       <button
         onClick={enviar}
         disabled={loading}
         className={`w-full py-3 rounded-lg text-white font-semibold shadow ${
-          loading
-            ? "bg-blue-400 cursor-not-allowed"
-            : "bg-blue-600 hover:bg-blue-700"
+          loading ? "bg-blue-400" : "bg-blue-600 hover:bg-blue-700"
         }`}
       >
         {loading ? "Enviando..." : "Enviar solicitud"}

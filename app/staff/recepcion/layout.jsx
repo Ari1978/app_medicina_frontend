@@ -24,7 +24,7 @@ export default function RecepcionLayout({ children }) {
         });
 
         if (!res.ok) {
-          router.push("/staff/login");
+          router.push("/staff-login");
           return;
         }
 
@@ -37,7 +37,7 @@ export default function RecepcionLayout({ children }) {
 
         setCargando(false);
       } catch {
-        router.push("/staff/login");
+        router.push("/staff-login");
       }
     }
 
@@ -65,7 +65,7 @@ export default function RecepcionLayout({ children }) {
                 credentials: "include",
               });
 
-              router.push("/staff/login");
+              router.push("/staff-login");
             }}
             className="text-red-600 hover:underline"
           >
