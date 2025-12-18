@@ -2,27 +2,75 @@
 
 import { useEffect, useState } from "react";
 
-// ✅ SOLO PRODUCCIÓN / FLY (sin fallback a localhost)
+// ✅ SOLO PRODUCCIÓN / FLY
 if (!process.env.NEXT_PUBLIC_API_URL) {
   throw new Error("Falta NEXT_PUBLIC_API_URL en el entorno");
 }
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL.replace(/\/$/, "");
 
+// -----------------------------
+// HELPERS
+// -----------------------------
+function capitalizar(texto = "") {
+  if (!texto) return "";
+  return texto.charAt(0).toUpperCase() + texto.slice(1);
+}
 
-export default function TurnosHoy() {
+function humanizarMotivo(turno) {
+  const { tipo, motivo } = turno;
+  if (!motivo) return "—";
+
+  const mapExamen = {
+    ingreso: "Ingreso",
+    egreso: "Egreso",
+    periodico: "Periódico",
+  };
+
+  const mapEstudio = {
+    pendiente: "Pendiente",
+    complementario: "Complementario",
+    otro: "Otro",
+  };
+
+  if (tipo === "examen") return mapExamen[motivo] || capitalizar(motivo);
+  if (tipo === "estudio") return mapEstudio[motivo] || capitalizar(motivo);
+
+  return capitalizar(motivo);
+}
+
+function obtenerEstudios(turno) {
+  const base = Array.isArray(turno.listaEstudios) ? turno.listaEstudios : [];
+  const adicionales = Array.isArray(turno.estudiosAdicionales)
+    ? turno.estudiosAdicionales
+    : [];
+  return [...base, ...adicionales];
+}
+
+function hoyISO() {
+  return new Date().toISOString().split("T")[0];
+}
+
+// -----------------------------
+// COMPONENTE
+// -----------------------------
+export default function TurnosPorDia() {
+  const [fecha, setFecha] = useState(hoyISO());
   const [turnos, setTurnos] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  // ✅ Cargar turnos del día (local + prod)
+  // =============================
+  // CARGAR TURNOS POR FECHA
+  // =============================
   useEffect(() => {
     const cargar = async () => {
       try {
         setLoading(true);
 
-        const res = await fetch(`${API_URL}/api/recepcion/turnos-hoy`, {
-          credentials: "include",
-        });
+        const res = await fetch(
+          `${API_URL}/api/recepcion/turnos?fecha=${fecha}`,
+          { credentials: "include" }
+        );
 
         if (!res.ok) throw new Error("Error cargando turnos");
 
@@ -37,13 +85,15 @@ export default function TurnosHoy() {
     };
 
     cargar();
-  }, []);
+  }, [fecha]);
 
-  // ✅ Cambiar estado (local + prod)
+  // =============================
+  // CAMBIAR ESTADO
+  // =============================
   const cambiarEstado = async (id, estado) => {
     try {
       const res = await fetch(
-        `${API_URL}/apirecepcion/turnos/${id}/estado`,
+        `${API_URL}/api/recepcion/turnos/${id}/estado`,
         {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
@@ -58,79 +108,141 @@ export default function TurnosHoy() {
         prev.map((t) => (t._id === id ? { ...t, estado } : t))
       );
     } catch (err) {
-      console.error("Error cambiando estado:", err);
+      console.error(err);
       alert("No se pudo actualizar el estado del turno");
     }
   };
 
-  return (
-    <div>
-      <h2 className="text-2xl font-bold mb-4">Turnos del Día</h2>
+  const imprimirTurno = (turno) => {
+    console.log("Imprimir turno:", turno._id);
+    alert(`(Demo) Imprimir ficha de ${turno.empleadoApellido}`);
+  };
 
-      <div className="overflow-x-auto bg-white rounded shadow">
-        <table className="min-w-full text-sm border">
-          <thead className="bg-gray-100">
-            <tr>
-              <th>Hora</th>
-              <th>Empleado</th>
-              <th>DNI</th>
-              <th>Empresa</th>
-              <th>Tipo</th>
-              <th>Estado</th>
-              <th>Acción</th>
+  // =============================
+  // UI
+  // =============================
+  return (
+    <div className="space-y-4">
+      {/* HEADER */}
+      <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-2">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-800">
+            Turnos por Día
+          </h2>
+          <p className="text-gray-500 text-sm">
+            Recepción, control de llegadas y estudios.
+          </p>
+        </div>
+
+        {/* SELECT FECHA */}
+        <input
+          type="date"
+          value={fecha}
+          onChange={(e) => setFecha(e.target.value)}
+          className="border rounded-lg px-3 py-2 text-sm"
+        />
+      </div>
+
+      {/* TABLA */}
+      <div className="overflow-x-auto bg-white rounded-2xl shadow border border-gray-100">
+        <table className="min-w-full text-sm">
+          <thead>
+            <tr className="bg-slate-50 border-b">
+              <th className="px-4 py-3 text-left">Hora</th>
+              <th className="px-4 py-3 text-left">Empleado</th>
+              <th className="px-4 py-3 text-left">DNI</th>
+              <th className="px-4 py-3 text-left">Empresa</th>
+              <th className="px-4 py-3 text-left">Motivo</th>
+              <th className="px-4 py-3 text-left">Estudios</th>
+              <th className="px-4 py-3 text-left">Estado</th>
+              <th className="px-4 py-3 text-center">Acción</th>
             </tr>
           </thead>
 
           <tbody>
-            {turnos.map((t) => (
-              <tr key={t._id} className="text-center border-t">
-                <td>{t.hora}</td>
+            {turnos.map((t, idx) => {
+              const estudios = obtenerEstudios(t);
+              const puedeImprimir = t.estado === "confirmado";
+              const bloqueado = t.estado === "realizado";
 
-                <td>
-                  {t.empleadoApellido} {t.empleadoNombre}
-                </td>
+              return (
+                <tr
+                  key={t._id}
+                  className={`border-t ${
+                    idx % 2 === 0 ? "bg-white" : "bg-slate-50/60"
+                  }`}
+                >
+                  <td className="px-4 py-3">{t.hora}</td>
 
-                <td>{t.empleadoDni}</td>
+                  <td className="px-4 py-3">
+                    <strong>
+                      {t.empleadoApellido} {t.empleadoNombre}
+                    </strong>
+                    <div className="text-xs text-gray-500">
+                      {t.puesto || "—"}
+                    </div>
+                  </td>
 
-                <td>{t.empresa?.razonSocial || "—"}</td>
+                  <td className="px-4 py-3">{t.empleadoDni}</td>
+                  <td className="px-4 py-3">
+                    {t.empresa?.razonSocial || "—"}
+                  </td>
 
-                <td className="capitalize">{t.tipo}</td>
+                  <td className="px-4 py-3">
+                    {humanizarMotivo(t)}
+                  </td>
 
-                <td className="capitalize font-semibold">
-                  {t.estado}
-                </td>
+                  <td className="px-4 py-3">
+                    {estudios.length === 0 ? "—" : estudios.join(", ")}
+                  </td>
 
-                <td className="space-x-2">
-                  <button
-                    onClick={() => cambiarEstado(t._id, "confirmado")}
-                    disabled={t.estado === "confirmado"}
-                    className="bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white px-2 py-1 rounded text-xs"
-                  >
-                    Llegó
-                  </button>
+                  <td className="px-4 py-3">
+                    <span className="text-xs font-semibold">
+                      {capitalizar(t.estado)}
+                    </span>
+                  </td>
 
-                  <button
-                    onClick={() => cambiarEstado(t._id, "ausente")}
-                    disabled={t.estado === "ausente"}
-                    className="bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white px-2 py-1 rounded text-xs"
-                  >
-                    Ausente
-                  </button>
-                </td>
-              </tr>
-            ))}
+                  <td className="px-4 py-3 text-center">
+                    <button
+                      onClick={() => cambiarEstado(t._id, "confirmado")}
+                      disabled={bloqueado || t.estado === "confirmado"}
+                      className="mr-1 bg-emerald-600 text-white px-2 py-1 rounded text-xs disabled:opacity-40"
+                    >
+                      Presente
+                    </button>
+
+                    <button
+                      onClick={() => cambiarEstado(t._id, "ausente")}
+                      disabled={bloqueado || t.estado === "ausente"}
+                      className="mr-1 bg-red-600 text-white px-2 py-1 rounded text-xs disabled:opacity-40"
+                    >
+                      Ausente
+                    </button>
+
+                    <button
+                      onClick={() => imprimirTurno(t)}
+                      disabled={bloqueado || !puedeImprimir}
+                      className="px-2 py-1 text-xs border rounded disabled:opacity-40"
+                    >
+                      🖨️
+                    </button>
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
 
-        {/* MENSAJES */}
         {!loading && turnos.length === 0 && (
-          <p className="text-center text-gray-500 p-4">
-            No hay turnos para hoy.
+          <p className="p-4 text-center text-gray-500">
+            No hay turnos para esta fecha.
           </p>
         )}
 
         {loading && (
-          <p className="text-center text-gray-500 p-4">Cargando...</p>
+          <p className="p-4 text-center text-gray-500">
+            Cargando...
+          </p>
         )}
       </div>
     </div>

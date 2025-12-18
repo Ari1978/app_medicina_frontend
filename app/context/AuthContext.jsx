@@ -1,52 +1,62 @@
 "use client";
 
-import { createContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 
 export const AuthContext = createContext(null);
 
-// ✅ SOLO PRODUCCIÓN / FLY (sin fallback a localhost)
+// ✅ SOLO PRODUCCIÓN / FLY
 if (!process.env.NEXT_PUBLIC_API_URL) {
   throw new Error("Falta NEXT_PUBLIC_API_URL en el entorno");
 }
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL.replace(/\/$/, "");
-console.log("🔥 API_URL COMPILADO:", API_URL);
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [role, setRole] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // ✅ SESIÓN AUTOMÁTICA (PRODUCCIÓN)
+  // ✅ SESIÓN AUTOMÁTICA POR CONTEXTO
   useEffect(() => {
     if (typeof window === "undefined") return;
 
     const checkSession = async () => {
       try {
-        const endpoints = [
-          { url: `${API_URL}/api/empresa/me`, role: "empresa" },
-          { url: `${API_URL}/api/staff/auth/me`, role: "staff" },
-          { url: `${API_URL}/api/admin/auth/me`, role: "admin" },
-          { url: `${API_URL}/api/superadmin/auth/me`, role: "superadmin" },
-        ];
+        const pathname = window.location.pathname;
 
-        for (const ep of endpoints) {
-          try {
-            const res = await fetch(ep.url, {
-              credentials: "include",
-            });
+        let endpoint = null;
+        let detectedRole = null;
 
-            if (res.ok) {
-              const data = await res.json();
-              setUser(data);
-              setRole(ep.role);
-              return;
-            }
-          } catch (_) {}
+        if (pathname.startsWith("/empresa")) {
+          endpoint = `${API_URL}/api/empresa/me`;
+          detectedRole = "empresa";
+        } else if (pathname.startsWith("/staff")) {
+          endpoint = `${API_URL}/api/staff/auth/me`;
+          detectedRole = "staff";
+        } else if (pathname.startsWith("/admin")) {
+          endpoint = `${API_URL}/api/admin/me`;
+          detectedRole = "admin";
+        } else if (pathname.startsWith("/superadmin")) {
+          endpoint = `${API_URL}/api/superadmin/me`;
+          detectedRole = "superadmin";
         }
 
-        setUser(null);
-        setRole(null);
+        if (!endpoint) {
+          setUser(null);
+          setRole(null);
+          return;
+        }
+
+        const res = await fetch(endpoint, { credentials: "include" });
+
+        if (res.ok) {
+          const data = await res.json();
+          setUser(data);
+          setRole(detectedRole);
+        } else {
+          setUser(null);
+          setRole(null);
+        }
       } finally {
         setLoading(false);
       }
@@ -55,13 +65,13 @@ export function AuthProvider({ children }) {
     checkSession();
   }, []);
 
-  // ✅ LOGIN UNIFICADO
+  // ✅ LOGIN
   const login = async (role, credentials) => {
     const urls = {
       empresa: `${API_URL}/api/empresa/login`,
       staff: `${API_URL}/api/staff/auth/login`,
-      admin: `${API_URL}/api/admin/auth/login`,
-      superadmin: `${API_URL}/api/superadmin/auth/login`,
+      admin: `${API_URL}/api/admin/login`,
+      superadmin: `${API_URL}/api/superadmin/login`,
     };
 
     try {
@@ -73,10 +83,8 @@ export function AuthProvider({ children }) {
       });
 
       const data = await res.json();
-
       if (!res.ok) throw new Error(data.message || "Login inválido");
 
-      // ✅ PRIMER ACCESO EMPRESA
       if (data.mustChangePassword) {
         return {
           ok: true,
@@ -85,8 +93,7 @@ export function AuthProvider({ children }) {
         };
       }
 
-      // ✅ LOGIN NORMAL
-      setUser(data.user ?? data.empresa ?? data);
+      setUser(data.user ?? data.staff ?? data.empresa ?? data);
       setRole(role);
 
       return { ok: true };
@@ -95,21 +102,18 @@ export function AuthProvider({ children }) {
     }
   };
 
-  // ✅ LOGOUT UNIFICADO
+  // ✅ LOGOUT
   const logout = async () => {
     const urls = {
       empresa: `${API_URL}/api/empresa/logout`,
       staff: `${API_URL}/api/staff/auth/logout`,
-      admin: `${API_URL}/api/admin/auth/logout`,
-      superadmin: `${API_URL}/api/superadmin/auth/logout`,
+      admin: `${API_URL}/api/admin/logout`,
+      superadmin: `${API_URL}/api/superadmin/logout`,
     };
 
     try {
       if (role) {
-        await fetch(urls[role], {
-          method: "POST",
-          credentials: "include",
-        });
+        await fetch(urls[role], { method: "POST", credentials: "include" });
       }
     } catch (_) {}
 
@@ -134,4 +138,13 @@ export function AuthProvider({ children }) {
       {children}
     </AuthContext.Provider>
   );
+}
+
+// ✅ HOOK
+export function useAuth() {
+  const ctx = useContext(AuthContext);
+  if (!ctx) {
+    throw new Error("useAuth debe usarse dentro de <AuthProvider>");
+  }
+  return ctx;
 }

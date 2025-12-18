@@ -88,16 +88,18 @@ export default function FormularioVisita() {
   // -----------------------------
   const soloLetras = (v) => v.replace(/[^a-zA-ZÁÉÍÓÚÑáéíóúñ\s]/g, "");
   const soloNumeros = (v) => v.replace(/\D/g, "");
-  const letrasYNumeros = (v) =>
-    v.replace(/[^a-zA-Z0-9ÁÉÍÓÚÑáéíóúñ\s]/g, "");
+  const letrasYNumeros = (v) => v.replace(/[^a-zA-Z0-9ÁÉÍÓÚÑáéíóúñ\s]/g, "");
 
   const handleChange = (e) => {
     let { name, value } = e.target;
 
     if (
-      ["empleadoApellido", "empleadoNombre", "puesto", "solicitanteNombre"].includes(
-        name
-      )
+      [
+        "empleadoApellido",
+        "empleadoNombre",
+        "puesto",
+        "solicitanteNombre",
+      ].includes(name)
     ) {
       value = soloLetras(value);
     }
@@ -177,55 +179,150 @@ export default function FormularioVisita() {
 
   return (
     <div className="space-y-6 bg-white p-6 rounded-xl shadow-md">
+      {/* ✅ BOTÓN VOLVER SUTIL */}
+      <a
+        href="/empresa/dashboard"
+        className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-blue-700 transition font-medium"
+      >
+        <span className="text-lg">←</span>
+        Volver al menú
+      </a>
+
       <h1 className="text-2xl font-bold text-blue-700">
         Solicitud de Visita Médica
       </h1>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <input className={baseInput} name="empleadoApellido" placeholder="Apellido" value={form.empleadoApellido} onChange={handleChange} />
-        <input className={baseInput} name="empleadoNombre" placeholder="Nombre" value={form.empleadoNombre} onChange={handleChange} />
-        <input className={baseInput} name="empleadoDni" placeholder="DNI" value={form.empleadoDni} onChange={handleChange} />
-        <input className={baseInput} name="puesto" placeholder="Puesto" value={form.puesto} onChange={handleChange} />
+        <input
+          className={baseInput}
+          name="empleadoApellido"
+          placeholder="Apellido"
+          value={form.empleadoApellido}
+          onChange={handleChange}
+        />
+        <input
+          className={baseInput}
+          name="empleadoNombre"
+          placeholder="Nombre"
+          value={form.empleadoNombre}
+          onChange={handleChange}
+        />
+        <input
+          className={baseInput}
+          name="empleadoDni"
+          placeholder="DNI"
+          value={form.empleadoDni}
+          onChange={handleChange}
+        />
+        <input
+          className={baseInput}
+          name="puesto"
+          placeholder="Puesto"
+          value={form.puesto}
+          onChange={handleChange}
+        />
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <select className={baseInput} value={form.provincia} onChange={(e) => setForm({ ...form, provincia: e.target.value, partido: "", localidad: "" })}>
+        <select
+          className={baseInput}
+          value={form.provincia}
+          onChange={(e) =>
+            setForm({
+              ...form,
+              provincia: e.target.value,
+              partido: "",
+              localidad: "",
+            })
+          }
+        >
           <option value="">Provincia</option>
           {provincias.map((p, i) => {
             const value = typeof p === "string" ? p : p.nombre;
             const key = typeof p === "string" ? p : p._id || i;
-            return <option key={key} value={value}>{value}</option>;
+            return (
+              <option key={key} value={value}>
+                {value}
+              </option>
+            );
           })}
         </select>
 
-        <select className={baseInput} value={form.partido} disabled={!form.provincia} onChange={(e) => setForm({ ...form, partido: e.target.value, localidad: "" })}>
+        <select
+          className={baseInput}
+          value={form.partido}
+          disabled={!form.provincia}
+          onChange={(e) =>
+            setForm({ ...form, partido: e.target.value, localidad: "" })
+          }
+        >
           <option value="">Partido</option>
           {partidos.map((p, i) => {
             const value = typeof p === "string" ? p : p.nombre;
             const key = typeof p === "string" ? p : p._id || i;
-            return <option key={key} value={value}>{value}</option>;
+            return (
+              <option key={key} value={value}>
+                {value}
+              </option>
+            );
           })}
         </select>
 
-        <select className={baseInput} value={form.localidad} disabled={!form.partido} name="localidad" onChange={handleChange}>
+        <select
+          className={baseInput}
+          value={form.localidad}
+          disabled={!form.partido}
+          name="localidad"
+          onChange={handleChange}
+        >
           <option value="">Localidad</option>
           {localidades.map((l, i) => {
             const value = typeof l === "string" ? l : l.nombre;
             const key = typeof l === "string" ? l : l._id || i;
-            return <option key={key} value={value}>{value}</option>;
+            return (
+              <option key={key} value={value}>
+                {value}
+              </option>
+            );
           })}
         </select>
       </div>
 
-      <input className={baseInput} name="direccion" placeholder="Dirección" value={form.direccion} onChange={handleChange} />
+      <input
+        className={baseInput}
+        name="direccion"
+        placeholder="Dirección"
+        value={form.direccion}
+        onChange={handleChange}
+      />
 
-      <textarea className={`${baseInput} h-28 resize-none`} name="motivo" placeholder="Describa el motivo" value={form.motivo} onChange={(e) => setForm({ ...form, motivo: e.target.value })} />
+      <textarea
+        className={`${baseInput} h-28 resize-none`}
+        name="motivo"
+        placeholder="Describa el motivo"
+        value={form.motivo}
+        onChange={(e) => setForm({ ...form, motivo: e.target.value })}
+      />
 
-      <h2 className="text-xl font-semibold text-gray-700 pt-2">Datos del solicitante</h2>
+      <h2 className="text-xl font-semibold text-gray-700 pt-2">
+        Datos del solicitante
+      </h2>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <input className={baseInput} name="solicitanteNombre" placeholder="Nombre" value={form.solicitanteNombre} onChange={handleChange} />
-        <input className={baseInput} name="solicitanteCelular" placeholder="Celular" value={form.solicitanteCelular} onChange={handleChange} />
+        <input
+          className={baseInput}
+          name="solicitanteNombre"
+          placeholder="Nombre"
+          value={form.solicitanteNombre}
+          onChange={handleChange}
+        />
+        <input
+          className={baseInput}
+          name="solicitanteCelular"
+          placeholder="Celular"
+          value={form.solicitanteCelular}
+          onChange={handleChange}
+        />
       </div>
 
       <button

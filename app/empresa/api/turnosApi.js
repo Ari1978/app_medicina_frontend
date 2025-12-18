@@ -31,7 +31,7 @@ export async function crearTurno(token, data) {
 
   // ✅ SOLO SI ES ESTUDIO
   if (data.tipo === "estudios") {
-    payload.motivoEstudio = data.motivoEstudio; // complementario | pendiente | otro
+    payload.motivo = data.motivo; // complementario | pendiente | otro
     payload.listaEstudios = data.listaEstudios; // obligatorio
   }
 

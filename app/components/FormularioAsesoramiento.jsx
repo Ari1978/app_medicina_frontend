@@ -6,10 +6,12 @@ import { enviarAsesoramiento } from "@/app/empresa/api/asesoramientoApi";
 export default function FormularioAsesoramiento() {
   const [loading, setLoading] = useState(false);
   const [ok, setOk] = useState(false);
+  const [archivo, setArchivo] = useState(null);
 
   const [form, setForm] = useState({
     solicitanteNombre: "",
     solicitanteCelular: "",
+    emailContacto: "", // ✅ NUEVO CAMPO
     puesto: "",
     tareas: "",
     tareasLivianas: "no",
@@ -17,9 +19,6 @@ export default function FormularioAsesoramiento() {
     detalles: "",
   });
 
-  // -----------------------------
-  // HELPERS DE VALIDACIÓN
-  // -----------------------------
   const soloLetras = (value) =>
     value.replace(/[^a-zA-ZÁÉÍÓÚáéíóúÑñ\s]/g, "");
 
@@ -27,7 +26,6 @@ export default function FormularioAsesoramiento() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-
     let nuevoValor = value;
 
     if (name === "solicitanteNombre" || name === "puesto") {
@@ -38,23 +36,36 @@ export default function FormularioAsesoramiento() {
       nuevoValor = soloNumeros(value);
     }
 
-    // textareas (tareas, detalles) quedan libres
     setForm((prev) => ({
       ...prev,
       [name]: nuevoValor,
     }));
   };
 
+  const handleArchivo = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setArchivo(file);
+  };
+
   const enviar = async () => {
     setLoading(true);
 
     try {
-      const payload = {
+      const formData = new FormData();
+
+      Object.entries({
         ...form,
         tareasLivianas: form.tareasLivianas === "si",
-      };
+      }).forEach(([key, value]) => {
+        formData.append(key, value);
+      });
 
-      await enviarAsesoramiento(null, payload);
+      if (archivo) {
+        formData.append("archivo", archivo);
+      }
+
+      await enviarAsesoramiento(null, formData);
       setOk(true);
     } catch (err) {
       console.error(err);
@@ -64,9 +75,6 @@ export default function FormularioAsesoramiento() {
     }
   };
 
-  // -----------------------------
-  // VISTA ÉXITO
-  // -----------------------------
   if (ok) {
     return (
       <div className="text-center py-12 space-y-6">
@@ -74,7 +82,7 @@ export default function FormularioAsesoramiento() {
           Solicitud enviada con éxito
         </h2>
         <p className="text-gray-700 text-lg">
-          El equipo médico analizará la situación y se comunicará contigo.
+          El equipo médico analizará la situación y se comunicará contigo por mail.
         </p>
 
         <a
@@ -87,28 +95,28 @@ export default function FormularioAsesoramiento() {
     );
   }
 
-  // -----------------------------
-  // FORMULARIO
-  // -----------------------------
   return (
     <div className="space-y-8 max-w-3xl mx-auto">
 
-      {/* TÍTULO */}
+      <a
+        href="/empresa/dashboard"
+        className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-blue-700 transition font-medium"
+      >
+        <span className="text-lg">←</span>
+        Volver al menú
+      </a>
+
       <h1 className="text-3xl font-bold text-blue-700 text-center">
         Solicitud de Asesoramiento Médico
       </h1>
 
-      {/* CARD: SOLICITANTE */}
+      {/* SOLICITANTE */}
       <div className="border rounded-xl p-5 bg-white shadow-sm space-y-4">
-        <h2 className="text-xl font-semibold text-gray-800">
-          Datos del Solicitante
-        </h2>
-
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <input
             className="input"
             name="solicitanteNombre"
-            placeholder="Nombre del solicitante"
+            placeholder="Nombre del contacto"
             value={form.solicitanteNombre}
             onChange={handleChange}
           />
@@ -116,21 +124,25 @@ export default function FormularioAsesoramiento() {
           <input
             className="input"
             name="solicitanteCelular"
-            placeholder="Celular del solicitante"
+            placeholder="Celular del contacto"
             value={form.solicitanteCelular}
             onChange={handleChange}
-            inputMode="numeric"
-            pattern="\d*"
+          />
+
+          {/* ✅ EMAIL DE CONTACTO */}
+          <input
+            className="input sm:col-span-2"
+            name="emailContacto"
+            type="email"
+            placeholder="Email de contacto"
+            value={form.emailContacto}
+            onChange={handleChange}
           />
         </div>
       </div>
 
-      {/* CARD: INFORMACIÓN DEL EMPLEADO */}
+      {/* EMPLEADO */}
       <div className="border rounded-xl p-5 bg-white shadow-sm space-y-4">
-        <h2 className="text-xl font-semibold text-gray-800">
-          Información del Empleado
-        </h2>
-
         <input
           className="input"
           name="puesto"
@@ -140,73 +152,66 @@ export default function FormularioAsesoramiento() {
         />
 
         <textarea
-          name="tareas"
-          placeholder="Describa las tareas realizadas"
           className="input h-28"
+          name="tareas"
           value={form.tareas}
           onChange={handleChange}
         />
       </div>
 
-      {/* CARD: REQUERIMIENTO */}
+      {/* ✅ REQUERIMIENTO */}
       <div className="border rounded-xl p-5 bg-white shadow-sm space-y-4">
-        <h2 className="text-xl font-semibold text-gray-800">
-          Detalles del Requerimiento
-        </h2>
 
-        {/* TAREAS LIVIANAS */}
-        <div>
-          <label className="font-semibold text-gray-700 block mb-1">
-            ¿Tareas livianas?
-          </label>
-          <select
-            className="input"
-            name="tareasLivianas"
-            value={form.tareasLivianas}
-            onChange={handleChange}
-          >
-            <option value="no">No</option>
-            <option value="si">Sí</option>
-          </select>
-        </div>
+        <label>¿Tienen tareas livianas?</label>
+        <select
+          className="input"
+          name="tareasLivianas"
+          value={form.tareasLivianas}
+          onChange={handleChange}
+        >
+          <option value="no">No</option>
+          <option value="si">Sí</option>
+        </select>
 
-        {/* MOTIVO */}
-        <div>
-          <label className="font-semibold text-gray-700 block mb-1">
-            Motivo
-          </label>
-          <select
-            className="input"
-            name="motivo"
-            value={form.motivo}
-            onChange={handleChange}
-          >
-            <option value="">Seleccione</option>
-            <option value="lesion">Lesión</option>
-            <option value="dolor">Dolor / Molestias</option>
-            <option value="accidente">Accidente laboral</option>
-            <option value="evaluacion">Evaluación médica</option>
-            <option value="otro">Otro</option>
-          </select>
-        </div>
+        <label>Motivo</label>
+        <select
+          className="input"
+          name="motivo"
+          value={form.motivo}
+          onChange={handleChange}
+        >
+          <option value="">Seleccione</option>
+          <option value="lesion">Lesión</option>
+          <option value="clinica">Evaluación clínica</option>
+          <option value="trauma">Trauma</option>
+          <option value="accidente">Accidente</option>
+          <option value="otro">Otro</option>
+        </select>
 
-        {/* DETALLES */}
         <textarea
-          name="detalles"
-          placeholder="Describa lo ocurrido o detalles relevantes"
           className="input h-32"
+          name="detalles"
           value={form.detalles}
           onChange={handleChange}
         />
+
+        {/* ✅ ARCHIVO */}
+        <label className="inline-flex items-center gap-2 cursor-pointer">
+          📎 Adjuntar archivo
+          <input type="file" className="hidden" onChange={handleArchivo} />
+        </label>
+
+        {archivo && (
+          <p className="text-sm text-green-700">
+            Archivo: {archivo.name}
+          </p>
+        )}
       </div>
 
-      {/* BOTÓN ENVIAR */}
       <button
         onClick={enviar}
         disabled={loading}
-        className={`w-full py-3 rounded-lg text-white font-semibold ${
-          loading ? "bg-blue-400" : "bg-blue-600 hover:bg-blue-700"
-        }`}
+        className="w-full py-3 rounded-lg text-white bg-blue-600 hover:bg-blue-700"
       >
         {loading ? "Enviando..." : "Enviar Solicitud"}
       </button>

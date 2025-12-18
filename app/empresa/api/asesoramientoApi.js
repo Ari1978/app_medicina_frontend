@@ -5,22 +5,24 @@ if (!process.env.NEXT_PUBLIC_API_URL) {
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL.replace(/\/$/, "");
 
-export async function enviarAsesoramiento(token, data) {
+export async function enviarAsesoramiento(token, formData) {
   const res = await fetch(
     `${API_URL}/api/empresa/formularios/asesoramiento`,
     {
       method: "POST",
-      credentials: "include", // ✅ necesario para la cookie
+      credentials: "include", // ✅ cookie de sesión
+      body: formData,         // ✅ SE ENVÍA FORMDATA DIRECTO
       headers: {
-        "Content-Type": "application/json",
-        Authorization: token ? `Bearer ${token}` : undefined, // ✅ JWT opcional
+        // ❌ NO pongas Content-Type acá
+        Authorization: token ? `Bearer ${token}` : undefined,
       },
-      body: JSON.stringify(data),
     }
   );
 
   if (!res.ok) {
-    throw new Error("Error al enviar solicitud");
+    const e = await res.json();
+    console.error("ERROR BACK:", e);
+    throw new Error(e.message || "Error al enviar solicitud");
   }
 
   return res.json();

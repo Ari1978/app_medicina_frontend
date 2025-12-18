@@ -5,24 +5,24 @@ if (!process.env.NEXT_PUBLIC_API_URL) {
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL.replace(/\/$/, "");
 
-
-
-export async function enviarTurnoEspecial(token, data) {
+export async function enviarTurnoEspecial(token, formData) {
   const res = await fetch(
     `${API_URL}/api/empresa/formularios/turno-especial`,
     {
       method: "POST",
-      credentials: "include", // ✅ cookies en local y producción
+      credentials: "include", // ✅ cookies
+      body: formData,         // ✅ SE ENVÍA FORMDATA
       headers: {
-        "Content-Type": "application/json",
-        Authorization: token ? `Bearer ${token}` : undefined, // ✅ JWT opcional
+        // ❌ NO Content-Type
+        Authorization: token ? `Bearer ${token}` : undefined,
       },
-      body: JSON.stringify(data),
     }
   );
 
   if (!res.ok) {
-    throw new Error("Error al enviar solicitud");
+    const e = await res.json();
+    console.error("ERROR BACK:", e);
+    throw new Error(e.message || "Error al enviar turno especial");
   }
 
   return res.json();

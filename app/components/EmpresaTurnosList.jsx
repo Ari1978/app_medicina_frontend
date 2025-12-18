@@ -41,6 +41,16 @@ async function cancelarTurno(id) {
 }
 
 export default function TurnosList({ turnos }) {
+  // ✅ SOLO FORMATO PARA MOSTRAR
+  const formatearFecha = (fecha) => {
+    const d = new Date(fecha);
+    return d.toLocaleDateString("es-AR", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    });
+  };
+
   if (!turnos || turnos.length === 0) {
     return (
       <p className="text-gray-600 text-lg bg-white/70 p-4 rounded-lg shadow">
@@ -51,6 +61,15 @@ export default function TurnosList({ turnos }) {
 
   return (
     <div className="space-y-4">
+      {/* ✅ BOTÓN VOLVER SUTIL */}
+      <a
+        href="/empresa/dashboard"
+        className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-blue-700 transition font-medium"
+      >
+        <span className="text-lg">←</span>
+        Volver al menú
+      </a>
+
       {turnos.map((t) => (
         <div
           key={t._id}
@@ -74,15 +93,25 @@ export default function TurnosList({ turnos }) {
             </span>
           </div>
 
-          <p><strong>Fecha:</strong> {t.fecha}</p>
-          <p><strong>Hora:</strong> {t.hora}</p>
+          {/* ✅ FECHA FORMATEADA SOLO EN VISTA */}
+          <p>
+            <strong>Fecha:</strong> {formatearFecha(t.fecha)}
+          </p>
+
+          <p>
+            <strong>Hora:</strong> {t.hora}
+          </p>
 
           <p className="mt-2">
             <strong>Empleado:</strong> {t.empleadoApellido}, {t.empleadoNombre}
           </p>
 
-          <p><strong>DNI:</strong> {t.empleadoDni}</p>
-          <p><strong>Puesto:</strong> {t.puesto}</p>
+          <p>
+            <strong>DNI:</strong> {t.empleadoDni}
+          </p>
+          <p>
+            <strong>Puesto:</strong> {t.puesto}
+          </p>
 
           {t.tipo === "examen" && (
             <p className="mt-2">

@@ -71,7 +71,7 @@ export default function EmpresaDashboard() {
                 flex items-center justify-start gap-3 px-4 hover:bg-blue-50 hover:border-blue-400 transition"
               >
                 <span className="text-lg">✍️</span>
-                <span>Autorizaciones de atención</span>
+                <span>Autorización de atención</span>
               </Button>
             </Link>
 
@@ -94,6 +94,50 @@ export default function EmpresaDashboard() {
               >
                 <span className="text-lg">⭐</span>
                 <span>Turnos Especiales</span>
+              </Button>
+            </Link>
+
+          </div>
+        </DashboardCard>
+
+        {/* ✅ CARD 3 — RESULTADOS, FACTURACIÓN, PERFIL */}
+        <DashboardCard title="Gestión" icon="📊">
+          <p className="text-gray-600 mb-3 text-sm sm:text-base">
+            Consultas administrativas y datos de la empresa.
+          </p>
+
+          <div className="space-y-3">
+
+            <Link href="/empresa/resultados">
+              <Button
+                variant="outline"
+                className="w-full h-11 rounded-lg border-gray-300 text-gray-700 
+                flex items-center justify-start gap-3 px-4 hover:bg-blue-50 hover:border-blue-400 transition"
+              >
+                <span className="text-lg">📑</span>
+                <span>Resultados de exámenes</span>
+              </Button>
+            </Link>
+
+            <Link href="/empresa/facturacion">
+              <Button
+                variant="outline"
+                className="w-full h-11 rounded-lg border-gray-300 text-gray-700 
+                flex items-center justify-start gap-3 px-4 hover:bg-blue-50 hover:border-blue-400 transition"
+              >
+                <span className="text-lg">🧾</span>
+                <span>Facturación</span>
+              </Button>
+            </Link>
+
+            <Link href="/empresa/perfil">
+              <Button
+                variant="outline"
+                className="w-full h-11 rounded-lg border-gray-300 text-gray-700 
+                flex items-center justify-start gap-3 px-4 hover:bg-blue-50 hover:border-blue-400 transition"
+              >
+                <span className="text-lg">⚙️</span>
+                <span>Actualizar datos de perfil</span>
               </Button>
             </Link>
 

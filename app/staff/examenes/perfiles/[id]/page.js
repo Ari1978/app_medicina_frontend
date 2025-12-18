@@ -1,10 +1,8 @@
-
 "use client";
 
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 
-// ✅ SOLO PRODUCCIÓN / FLY (sin fallback a localhost)
 if (!process.env.NEXT_PUBLIC_API_URL) {
   throw new Error("Falta NEXT_PUBLIC_API_URL en el entorno");
 }
@@ -23,7 +21,9 @@ export default function EditarPerfil() {
 
   const [loading, setLoading] = useState(true);
 
-  // ✅ Cargar perfil
+  // -------------------------------
+  // CARGAR PERFIL EXISTENTE
+  // -------------------------------
   useEffect(() => {
     if (!id) return;
 
@@ -36,8 +36,18 @@ export default function EditarPerfil() {
         if (!res.ok) throw new Error("Error al cargar perfil");
 
         const data = await res.json();
+
         setPuesto(data.puesto || "");
-        setEstudios(Array.isArray(data.estudios) ? data.estudios : []);
+
+        // limpiar _id para evitar error DTO
+        const limpio = (Array.isArray(data.estudios) ? data.estudios : []).map(
+          (e) => ({
+            nombre: e.nombre,
+            sector: e.sector,
+          })
+        );
+
+        setEstudios(limpio);
       } catch (err) {
         console.error("Error cargando perfil:", err);
       } finally {
@@ -48,7 +58,9 @@ export default function EditarPerfil() {
     cargarPerfil();
   }, [id]);
 
-  // ✅ Agregar estudio
+  // -------------------------------
+  // AGREGAR ESTUDIO
+  // -------------------------------
   const agregar = () => {
     if (!nombre || !sector) return;
 
@@ -57,29 +69,45 @@ export default function EditarPerfil() {
     setSector("");
   };
 
-  // ✅ Eliminar estudio
+  // -------------------------------
+  // ELIMINAR ESTUDIO
+  // -------------------------------
   const eliminar = (i) => {
     setEstudios(estudios.filter((_, index) => index !== i));
   };
 
-  // ✅ Guardar cambios
+  // -------------------------------
+  // GUARDAR CAMBIOS
+  // -------------------------------
   const guardar = async () => {
     try {
-      await fetch(`${API_URL}/api/perfil-examen/${id}`, {
+      const res = await fetch(`${API_URL}/api/perfil-examen/${id}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
         },
         credentials: "include",
-        body: JSON.stringify({ puesto, estudios }),
+        body: JSON.stringify({
+          puesto,     // 👈 NOMBRE CORRECTO
+          estudios,   // 👈 YA SIN ID
+        }),
       });
+
+      if (!res.ok) {
+        const msg = await res.text();
+        throw new Error(msg);
+      }
 
       router.push("/staff/examenes/perfiles");
     } catch (err) {
       console.error("Error al guardar perfil:", err);
+      alert("No se pudo guardar el perfil");
     }
   };
 
+  // -------------------------------
+  // LOADING
+  // -------------------------------
   if (loading) {
     return (
       <div className="min-h-[300px] flex items-center justify-center text-gray-600">
@@ -88,6 +116,9 @@ export default function EditarPerfil() {
     );
   }
 
+  // -------------------------------
+  // UI
+  // -------------------------------
   return (
     <div className="max-w-2xl mx-auto bg-white p-6 shadow rounded">
       <h2 className="text-2xl font-bold mb-4">Editar Perfil</h2>

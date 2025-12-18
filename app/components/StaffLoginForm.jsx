@@ -10,26 +10,6 @@ if (!process.env.NEXT_PUBLIC_API_URL) {
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL.replace(/\/$/, "");
 
-export async function getDisponibilidad(fecha) {
-  const url = `${API_URL}/api/empresa/disponibilidad?fecha=${encodeURIComponent(fecha)}`;
-
-  const res = await fetch(url, {
-    method: "GET",
-    credentials: "include", // ✅ SOLO COOKIE, SIN AUTH HEADER
-    headers: {
-      "Content-Type": "application/json",
-    },
-  });
-
-  if (!res.ok) {
-    const error = await res.text();
-    throw new Error("Error al obtener disponibilidad: " + error);
-  }
-
-  return res.json();
-}
-
-
 export default function StaffLoginForm() {
   const router = useRouter();
 
@@ -57,7 +37,7 @@ export default function StaffLoginForm() {
     try {
       const res = await fetch(`${API_URL}/api/staff/auth/login`, {
         method: "POST",
-        credentials: "include",
+        credentials: "include", // ✅ COOKIE JWT
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
       });
@@ -72,16 +52,13 @@ export default function StaffLoginForm() {
 
       const permisos = data.staff?.permisos || [];
 
-      // ✅ REDIRECCIÓN POR PERMISOS
-      if (permisos.includes("examenes")) {
-        router.push("/staff/examenes/dashboard");
-      } else if (permisos.includes("estudios")) {
-        router.push("/staff/estudios/dashboard");
-      } else if (permisos.includes("recepcion")) {
-        router.push("/staff/recepcion/dashboard");
-      } else {
+      // ✅ REDIRECCIÓN UNIFICADA
+      if (!permisos.length) {
         router.push("/staff/sin-permisos");
+        return;
       }
+
+      router.push("/staff/dashboard");
     } catch (err) {
       setError("Error en el servidor");
     }

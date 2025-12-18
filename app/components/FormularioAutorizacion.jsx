@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from "react";
@@ -20,8 +19,7 @@ export default function FormularioAutorizacion() {
   // -----------------------------
   // VALIDACIÓN
   // -----------------------------
-  const soloLetras = (v) =>
-    v.replace(/[^a-zA-ZÁÉÍÓÚÑáéíóúñ\s]/g, "");
+  const soloLetras = (v) => v.replace(/[^a-zA-ZÁÉÍÓÚÑáéíóúñ\s]/g, "");
 
   const soloNumeros = (v) => v.replace(/\D/g, "");
 
@@ -90,6 +88,14 @@ export default function FormularioAutorizacion() {
   // -----------------------------
   return (
     <div className="space-y-8 max-w-3xl mx-auto">
+      {/* ✅ BOTÓN VOLVER SUTIL */}
+      <a
+        href="/empresa/dashboard"
+        className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-blue-700 transition font-medium"
+      >
+        <span className="text-lg">←</span>
+        Volver al menú
+      </a>
 
       <h1 className="text-3xl font-bold text-blue-700 text-center">
         Solicitud de Autorización Médica
@@ -133,7 +139,9 @@ export default function FormularioAutorizacion() {
             <option value="">Seleccione...</option>
             <option value="clinica">Clinica Medica</option>
             <option value="traumatologia">Traumatologia</option>
-            <option value="accidente no declarado">Accidente no declarado</option>
+            <option value="accidente no declarado">
+              Accidente no declarado
+            </option>
             <option value="accidente declarado">Accidente declarado</option>
             <option value="otro">Otro</option>
           </select>
@@ -142,9 +150,7 @@ export default function FormularioAutorizacion() {
 
       {/* CARD: AUTORIZANTE */}
       <div className="border rounded-xl p-5 bg-white shadow-sm space-y-4">
-        <h2 className="text-xl font-semibold text-gray-800">
-          Quien autoriza
-        </h2>
+        <h2 className="text-xl font-semibold text-gray-800">Quien autoriza</h2>
 
         <input
           className="input"

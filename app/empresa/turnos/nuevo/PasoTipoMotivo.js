@@ -18,7 +18,7 @@ export default function Paso2TipoMotivo({
 
   const [estudiosPerfil, setEstudiosPerfil] = useState([]);
 
-  // ✅ ENUMS CORRECTOS PARA EL BACK
+  // ✅ ENUMS CORRECTOS
   const motivosExamen = ["ingreso", "egreso", "periodico"];
   const motivosEstudios = ["pendiente", "complementario", "otro"];
 
@@ -67,12 +67,12 @@ export default function Paso2TipoMotivo({
     "Electrocardiograma",
   ];
 
-  // ✅ VALIDACIÓN CORRECTA PARA HABILITAR EL BOTÓN
+  // ✅ VALIDACIÓN CORRECTA
   const puedeSeguir =
     form.tipo &&
     ((form.tipo === "examen" && form.motivo) ||
       (form.tipo === "estudios" &&
-        form.motivoEstudio &&
+        form.motivo &&
         form.listaEstudios?.length > 0));
 
   return (
@@ -92,8 +92,7 @@ export default function Paso2TipoMotivo({
             setForm({
               ...form,
               tipo: e.target.value,
-              motivo: "",
-              motivoEstudio: "",
+              motivo: "",              // ✅ SOLO UNA VEZ
               perfilExamen: "",
               listaEstudios: [],
               estudiosAdicionales: [],
@@ -112,16 +111,10 @@ export default function Paso2TipoMotivo({
           <label className="block text-sm font-semibold mb-1">Motivo</label>
           <select
             className="w-full border rounded-lg px-3 py-2"
-            value={
-              form.tipo === "examen" ? form.motivo : form.motivoEstudio
+            value={form.motivo}
+            onChange={(e) =>
+              setForm({ ...form, motivo: e.target.value })
             }
-            onChange={(e) => {
-              if (form.tipo === "examen") {
-                setForm({ ...form, motivo: e.target.value });
-              } else {
-                setForm({ ...form, motivoEstudio: e.target.value });
-              }
-            }}
           >
             <option value="">Seleccionar motivo...</option>
 
@@ -152,7 +145,6 @@ export default function Paso2TipoMotivo({
             }}
           >
             <option value="">Seleccionar perfil...</option>
-
             <option key="basico" value="Básico de Ley">
               Básico de Ley
             </option>

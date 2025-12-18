@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from "react";
@@ -12,6 +11,7 @@ export default function FormularioPresupuesto() {
     empleadoApellido: "",
     empleadoNombre: "",
     celular: "",
+    emailContacto: "", // ✅ NUEVO
     motivo: "",
     detalles: "",
     tipoServicio: "",
@@ -21,9 +21,7 @@ export default function FormularioPresupuesto() {
   // -----------------------------
   // VALIDACIONES
   // -----------------------------
-  const soloLetras = (v) =>
-    v.replace(/[^a-zA-ZÁÉÍÓÚÑáéíóúñ\s]/g, "");
-
+  const soloLetras = (v) => v.replace(/[^a-zA-ZÁÉÍÓÚÑáéíóúñ\s]/g, "");
   const soloNumeros = (v) => v.replace(/\D/g, "");
 
   const handleChange = (e) => {
@@ -69,7 +67,7 @@ export default function FormularioPresupuesto() {
         </h2>
 
         <p className="text-gray-700 text-lg">
-          Nuestro equipo preparará el presupuesto solicitado.
+          Nuestro equipo preparará el presupuesto solicitado y se comunicará por mail.
         </p>
 
         <a
@@ -87,47 +85,70 @@ export default function FormularioPresupuesto() {
   // -----------------------------
   return (
     <div className="space-y-8 max-w-3xl mx-auto">
+      {/* ✅ BOTÓN VOLVER SUTIL */}
+      <a
+        href="/empresa/dashboard"
+        className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-blue-700 transition font-medium"
+      >
+        <span className="text-lg">←</span>
+        Volver al menú
+      </a>
 
       <h1 className="text-3xl font-bold text-blue-700 text-center">
-        Solicitud de Presupuesto Médico
+        Solicitud de Presupuesto
       </h1>
 
-      {/* CARD: EMPLEADO */}
-      <div className="border rounded-xl p-5 bg-white shadow-sm space-y-4">
-        <h2 className="text-xl font-semibold text-gray-800">Datos del Empleado</h2>
+      {/* CARD: DATOS DE CONTACTO */}
+<div className="border rounded-xl p-5 bg-white shadow-sm space-y-4">
+  <h2 className="text-xl font-semibold text-gray-800">
+    Datos de Contacto
+  </h2>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <input
-            className="input"
-            name="empleadoApellido"
-            placeholder="Apellido"
-            value={form.empleadoApellido}
-            onChange={handleChange}
-          />
+  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+    <input
+      className="input"
+      name="empleadoApellido"
+      placeholder="Apellido del contacto"
+      value={form.empleadoApellido}
+      onChange={handleChange}
+    />
 
-          <input
-            className="input"
-            name="empleadoNombre"
-            placeholder="Nombre"
-            value={form.empleadoNombre}
-            onChange={handleChange}
-          />
-        </div>
+    <input
+      className="input"
+      name="empleadoNombre"
+      placeholder="Nombre del contacto"
+      value={form.empleadoNombre}
+      onChange={handleChange}
+    />
+  </div>
 
-        <input
-          className="input"
-          name="celular"
-          placeholder="Celular del empleado"
-          value={form.celular}
-          onChange={handleChange}
-          inputMode="numeric"
-          pattern="\d*"
-        />
-      </div>
+  <input
+    className="input"
+    name="celular"
+    placeholder="Celular de contacto"
+    value={form.celular}
+    onChange={handleChange}
+    inputMode="numeric"
+    pattern="\d*"
+  />
+
+  {/* ✅ EMAIL CONTACTO */}
+  <input
+    className="input"
+    type="email"
+    name="emailContacto"
+    placeholder="Email de contacto"
+    value={form.emailContacto}
+    onChange={handleChange}
+  />
+</div>
+
 
       {/* CARD: TIPO DE SERVICIO */}
       <div className="border rounded-xl p-5 bg-white shadow-sm space-y-4">
-        <h2 className="text-xl font-semibold text-gray-800">Servicio Solicitado</h2>
+        <h2 className="text-xl font-semibold text-gray-800">
+          Servicio Solicitado
+        </h2>
 
         <select
           name="tipoServicio"
@@ -159,7 +180,9 @@ export default function FormularioPresupuesto() {
 
       {/* CARD: DESCRIPCIÓN */}
       <div className="border rounded-xl p-5 bg-white shadow-sm space-y-3">
-        <h2 className="text-xl font-semibold text-gray-800">Detalles del Pedido</h2>
+        <h2 className="text-xl font-semibold text-gray-800">
+          Detalles del Pedido
+        </h2>
 
         <input
           className="input"
