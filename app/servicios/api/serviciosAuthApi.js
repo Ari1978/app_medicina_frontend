@@ -1,4 +1,4 @@
-// src/app/servicios/api/serviciosAuthApi.js
+
 
 if (!process.env.NEXT_PUBLIC_API_URL) {
   throw new Error("Falta NEXT_PUBLIC_API_URL");

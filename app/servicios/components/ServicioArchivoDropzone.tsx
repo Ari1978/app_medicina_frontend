@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import {
   subirArchivoServicioConProgreso,
-} from '../api/serviciosArchivosApI';
+} from '../api/serviciosArchivosApi';
 
 export default function ServicioArchivoDropzoneProgreso({
   servicioId,

@@ -1,4 +1,4 @@
-// src/app/servicios/api/serviciosArchivosApi.js
+
 
 // 🔒 Validación temprana de entorno
 if (!process.env.NEXT_PUBLIC_API_URL) {

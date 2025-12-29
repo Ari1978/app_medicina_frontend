@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import {
   listarArchivosServicio,
   eliminarArchivoServicio,
-} from '../api/serviciosArchivosApI';
+} from '../api/serviciosArchivosApi';
 
 export default function ServicioArchivosPreview({
   servicioId,
