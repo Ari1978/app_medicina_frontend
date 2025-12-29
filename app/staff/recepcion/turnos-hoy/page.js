@@ -76,42 +76,43 @@ export default function TurnosPorDia() {
   // CARGAR TURNOS POR FECHA
   // =============================
   useEffect(() => {
-    const cargar = async () => {
-      try {
-        setLoading(true);
+  const controller = new AbortController();
 
-        const res = await fetch(
-          `${API_URL}/api/staff/recepcion/turnos?fecha=${fecha}`,
-          { credentials: "include", cache: "no-store" }
-        );
+  const cargar = async () => {
+    try {
+      setLoading(true);
 
-        if (!res.ok) throw new Error("Error cargando turnos");
+      const res = await fetch(
+        `${API_URL}/api/staff/recepcion/turnos?fecha=${fecha}`,
+        {
+          credentials: "include",
+          cache: "no-store",
+          signal: controller.signal,
+        }
+      );
 
-        const data = await res.json();
+      if (!res.ok) throw new Error("Error cargando turnos");
 
-        // ✅ FIX: soporta cualquier wrapper del backend
-        const lista =
-          Array.isArray(data)
-            ? data
-            : Array.isArray(data?.turnos)
-            ? data.turnos
-            : Array.isArray(data?.items)
-            ? data.items
-            : Array.isArray(data?.data)
-            ? data.data
-            : [];
+      const data = await res.json();
+      const lista = Array.isArray(data)
+        ? data
+        : data?.turnos || data?.items || data?.data || [];
 
-        setTurnos(lista);
-      } catch (err) {
-        console.error("Error cargando turnos:", err);
+      setTurnos(lista);
+    } catch (err) {
+      if (err.name !== "AbortError") {
+        console.error(err);
         setTurnos([]);
-      } finally {
-        setLoading(false);
       }
-    };
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    cargar();
-  }, [fecha]);
+  cargar();
+  return () => controller.abort();
+}, [fecha]);
+
 
   // =============================
   // CAMBIAR ESTADO

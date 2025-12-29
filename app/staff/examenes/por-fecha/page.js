@@ -70,17 +70,14 @@ export default function TurnosPorFecha() {
   // =========================
   const guardarPracticas = async (id) => {
     try {
-      const res = await fetch(
-        `${API_URL}/api/staff/turnos/${id}/practicas`,
-        {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify({
-            listaPracticas: practicasEditadas,
-          }),
-        }
-      );
+      const res = await fetch(`${API_URL}/api/staff/turnos/${id}/practicas`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          listaPracticas: practicasEditadas,
+        }),
+      });
 
       if (!res.ok) throw new Error();
 
@@ -145,14 +142,10 @@ export default function TurnosPorFecha() {
                   <td className="px-4 py-2">{t.puesto}</td>
 
                   {/* EMPRESA */}
-                  <td className="px-4 py-2">
-                    {t.empresa?.razonSocial || "—"}
-                  </td>
+                  <td className="px-4 py-2">{t.empresa?.razonSocial || "—"}</td>
 
                   {/* MOTIVO */}
-                  <td className="px-4 py-2">
-                    {capitalizar(t.motivo)}
-                  </td>
+                  <td className="px-4 py-2">{capitalizar(t.motivo)}</td>
 
                   {/* PRACTICAS */}
                   <td className="px-4 py-2">
@@ -190,11 +183,12 @@ export default function TurnosPorFecha() {
 
                         <div className="max-h-64 overflow-y-auto border rounded p-2 space-y-1">
                           {Object.entries(catalogo)
-                            .filter(([codigo, nombre]) =>
-                              codigo.includes(busqueda) ||
-                              nombre
-                                .toLowerCase()
-                                .includes(busqueda.toLowerCase())
+                            .filter(
+                              ([codigo, nombre]) =>
+                                codigo.includes(busqueda) ||
+                                nombre
+                                  .toLowerCase()
+                                  .includes(busqueda.toLowerCase())
                             )
                             .map(([codigo, nombre]) => (
                               <label
@@ -243,9 +237,9 @@ export default function TurnosPorFecha() {
                               );
                               setBusqueda("");
                             }}
-                            className="text-blue-600 text-xs"
+                            className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 text-sm font-semibold"
                           >
-                            Editar
+                            📝 Editar
                           </button>
                         )}
                       </div>

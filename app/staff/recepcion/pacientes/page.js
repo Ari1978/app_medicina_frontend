@@ -40,30 +40,39 @@ export default function NuevoPacientePage() {
   // ✅ AUTOCOMPLETE INCREMENTAL REAL (LOCAL + PROD)
   // ===============================
   useEffect(() => {
-    if (busquedaEmpresa.length < 2) {
-      setSugerencias([]);
-      return;
-    }
+  if (busquedaEmpresa.length < 2) {
+    setSugerencias([]);
+    return;
+  }
 
-    const buscar = async () => {
-      try {
-        const res = await fetch(
-          `${API_URL}/api/empresa/buscar?query=${encodeURIComponent(busquedaEmpresa)}`,
-          { credentials: "include" }
-        );
+  const controller = new AbortController();
 
-        if (!res.ok) throw new Error("Error en búsqueda");
+  const buscar = async () => {
+    try {
+      const res = await fetch(
+        `${API_URL}/api/empresa/buscar?query=${encodeURIComponent(busquedaEmpresa)}`,
+        {
+          credentials: "include",
+          signal: controller.signal,
+        }
+      );
 
-        const data = await res.json();
-        setSugerencias(Array.isArray(data) ? data : []);
-      } catch (err) {
-        console.error("Error buscando empresas", err);
+      if (!res.ok) throw new Error("Error en búsqueda");
+
+      const data = await res.json();
+      setSugerencias(Array.isArray(data) ? data : []);
+    } catch (err) {
+      if (err.name !== "AbortError") {
+        console.error(err);
         setSugerencias([]);
       }
-    };
+    }
+  };
 
-    buscar();
-  }, [busquedaEmpresa]);
+  buscar();
+  return () => controller.abort();
+}, [busquedaEmpresa]);
+
 
   const seleccionarEmpresa = (empresa) => {
     setForm({ ...form, empresa: empresa.razonSocial });

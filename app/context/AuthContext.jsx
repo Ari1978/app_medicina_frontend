@@ -4,7 +4,6 @@ import { createContext, useContext, useEffect, useState } from "react";
 
 export const AuthContext = createContext(null);
 
-// ✅ SOLO PRODUCCIÓN / FLY
 if (!process.env.NEXT_PUBLIC_API_URL) {
   throw new Error("Falta NEXT_PUBLIC_API_URL en el entorno");
 }
@@ -12,31 +11,34 @@ if (!process.env.NEXT_PUBLIC_API_URL) {
 const API_URL = process.env.NEXT_PUBLIC_API_URL.replace(/\/$/, "");
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null);
-  const [role, setRole] = useState(null);
+  // 🔑 CLAVE: undefined = no decidido todavía
+  const [user, setUser] = useState(undefined);
+  const [role, setRole] = useState(undefined);
   const [loading, setLoading] = useState(true);
 
-  // =========================
-  // SESIÓN AUTOMÁTICA
-  // =========================
   useEffect(() => {
-    if (typeof window === "undefined") return;
-
     const checkSession = async () => {
       try {
         const pathname = window.location.pathname;
+
         let endpoint = null;
+        let detectedRole = null;
 
         if (pathname.startsWith("/empresa")) {
           endpoint = `${API_URL}/api/empresa/me`;
+          detectedRole = "empresa";
         } else if (pathname.startsWith("/staff")) {
           endpoint = `${API_URL}/api/staff/auth/me`;
+          detectedRole = "staff";
         } else if (pathname.startsWith("/servicios")) {
           endpoint = `${API_URL}/api/servicios/auth/me`;
+          detectedRole = "servicios";
         } else if (pathname.startsWith("/admin")) {
           endpoint = `${API_URL}/api/admin/me`;
+          detectedRole = "admin";
         } else if (pathname.startsWith("/superadmin")) {
           endpoint = `${API_URL}/api/superadmin/me`;
+          detectedRole = "superadmin";
         }
 
         if (!endpoint) {
@@ -50,9 +52,6 @@ export function AuthProvider({ children }) {
           cache: "no-store",
         });
 
-        
-
-        // ❌ SESIÓN INVÁLIDA
         if (!res.ok) {
           setUser(null);
           setRole(null);
@@ -62,8 +61,8 @@ export function AuthProvider({ children }) {
         const data = await res.json();
 
         setUser(data);
-        setRole(data.role); // 🔑 VIENE DEL BACKEND
-      } catch (err) {
+        setRole(detectedRole);
+      } catch {
         setUser(null);
         setRole(null);
       } finally {
@@ -105,9 +104,7 @@ export function AuthProvider({ children }) {
         };
       }
 
-      const loggedUser = data.user ?? data.staff ?? data.empresa ?? data;
-
-      setUser(loggedUser);
+      setUser(data.empresa ?? data.staff ?? data.user ?? data);
       setRole(loginRole);
 
       return { ok: true };
@@ -135,16 +132,11 @@ export function AuthProvider({ children }) {
           credentials: "include",
         });
       }
-    } catch (_) {}
+    } catch {}
 
     setUser(null);
     setRole(null);
   };
-
-  // =========================
-  // HELPERS
-  // =========================
-  const hasPermiso = (permiso) => user?.permisos?.includes(permiso);
 
   return (
     <AuthContext.Provider
@@ -155,16 +147,11 @@ export function AuthProvider({ children }) {
         login,
         logout,
 
-        // roles
         isEmpresa: role === "empresa",
         isStaff: role === "staff",
         isServicio: role === "servicios",
-        isMedico: role === "medico",
         isAdmin: role === "admin",
         isSuperAdmin: role === "superadmin",
-
-        // permisos
-        hasPermiso,
       }}
     >
       {children}
@@ -172,13 +159,8 @@ export function AuthProvider({ children }) {
   );
 }
 
-// =========================
-// HOOK
-// =========================
 export function useAuth() {
   const ctx = useContext(AuthContext);
-  if (!ctx) {
-    throw new Error("useAuth debe usarse dentro de <AuthProvider>");
-  }
+  if (!ctx) throw new Error("useAuth debe usarse dentro de <AuthProvider>");
   return ctx;
 }

@@ -50,7 +50,7 @@ export default function StaffSidebar() {
                 href="/staff/recepcion/buscar"
                 className="block hover:text-blue-300"
               >
-                🔍 Búsqueda Rápida
+                📝 Editar datos de empleados
               </Link>
             </div>
           </div>
@@ -59,7 +59,7 @@ export default function StaffSidebar() {
         {/* ✅ EXÁMENES */}
         {permisos.includes("examenes") && (
           <div className="space-y-2">
-            <p className="font-semibold text-emerald-400">🧬 Exámenes</p>
+            <p className="font-semibold text-emerald-400">🩺 Exámenes</p>
 
             <div className="ml-4 space-y-1 text-sm">
               <Link
@@ -87,16 +87,10 @@ export default function StaffSidebar() {
                 href="/staff/examenes/perfiles"
                 className="block hover:text-emerald-300"
               >
-                🧬 Perfiles de Exámenes
+                👷 Perfiles de Exámenes
               </Link>
 
-              {/* ✅ NUEVO – entrada al flujo que termina en /staff/turnos/:id */}
-              <Link
-                href="/staff/examenes/evaluacion-medica"
-                className="block hover:text-emerald-300"
-              >
-                🧾 Evaluación médica
-              </Link>
+              
             </div>
           </div>
         )}
