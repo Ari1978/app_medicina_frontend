@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL.replace(/\/$/, "");
@@ -12,59 +12,72 @@ const toArray = (data) => {
 };
 
 export default function ResultadosStaffPage() {
-  const [empresas, setEmpresas] = useState([]);
-  const [empresaId, setEmpresaId] = useState("");
   const [turnos, setTurnos] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [busco, setBusco] = useState(false);
+
+  // filtros
+  const [dni, setDni] = useState("");
+  const [nombre, setNombre] = useState("");
 
   // =========================
-  // EMPRESAS CON TURNOS CONFIRMADOS
+  // BUSCAR RESULTADOS (BACK REAL)
   // =========================
-  useEffect(() => {
-    fetch(`${API_URL}/api/staff/turnos/empresas-con-examenes`, {
+  const buscar = () => {
+    setBusco(true);
+    setLoading(true);
+
+    const params = new URLSearchParams();
+    if (dni) params.append("dni", dni);
+    if (nombre) params.append("nombre", nombre);
+
+    fetch(`${API_URL}/api/staff/resultados?${params.toString()}`, {
       credentials: "include",
     })
       .then((res) => res.json())
-      .then((data) => setEmpresas(toArray(data)))
-      .catch(() => setEmpresas([]));
-  }, []);
-
-  // =========================
-  // TURNOS CONFIRMADOS POR EMPRESA
-  // =========================
-  useEffect(() => {
-    if (!empresaId) {
-      setTurnos([]);
-      return;
-    }
-
-    fetch(
-      `${API_URL}/api/staff/turnos/confirmados/empresa/${empresaId}`,
-      { credentials: "include" }
-    )
-      .then((res) => res.json())
       .then((data) => setTurnos(toArray(data)))
-      .catch(() => setTurnos([]));
-  }, [empresaId]);
+      .catch(() => setTurnos([]))
+      .finally(() => setLoading(false));
+  };
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold">Carga de Resultados</h1>
+      <h1 className="text-2xl font-bold">Resultados de Exámenes</h1>
 
-      {/* SELECT EMPRESA */}
-      <select
-        className="border px-4 py-2 rounded w-full max-w-md"
-        value={empresaId}
-        onChange={(e) => setEmpresaId(e.target.value)}
-      >
-        <option value="">Seleccionar empresa</option>
-        {empresas.map((e) => (
-          <option key={e._id} value={e._id}>
-            {e.razonSocial}
-          </option>
-        ))}
-      </select>
+      {/* FILTROS */}
+      <div className="flex gap-4 max-w-xl">
+        <input
+          type="text"
+          placeholder="DNI"
+          value={dni}
+          onChange={(e) => setDni(e.target.value)}
+          className="border px-3 py-2 rounded w-full"
+        />
 
-      {/* LISTA DE TURNOS */}
+        <input
+          type="text"
+          placeholder="Nombre / Apellido"
+          value={nombre}
+          onChange={(e) => setNombre(e.target.value)}
+          className="border px-3 py-2 rounded w-full"
+        />
+
+        <button
+          onClick={buscar}
+          className="px-4 py-2 bg-blue-600 text-white rounded"
+        >
+          Buscar
+        </button>
+      </div>
+
+      {/* ESTADOS */}
+      {loading && <p>Cargando...</p>}
+
+      {!loading && busco && turnos.length === 0 && (
+        <p className="text-gray-500">No hay resultados para mostrar.</p>
+      )}
+
+      {/* LISTADO */}
       {turnos.length > 0 && (
         <div className="grid gap-4">
           {turnos.map((t) => {
@@ -85,7 +98,7 @@ export default function ResultadosStaffPage() {
                   </p>
 
                   <p className="text-sm text-gray-500">
-                    Puesto: {t.puesto} · Tipo: {t.tipo}
+                    Puesto: {t.puesto}
                   </p>
 
                   {tieneResultado && (
@@ -111,12 +124,6 @@ export default function ResultadosStaffPage() {
             );
           })}
         </div>
-      )}
-
-      {empresaId && turnos.length === 0 && (
-        <p className="text-gray-500">
-          No hay turnos confirmados para esta empresa.
-        </p>
       )}
     </div>
   );

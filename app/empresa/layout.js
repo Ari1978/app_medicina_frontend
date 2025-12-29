@@ -12,10 +12,10 @@ export default function EmpresaLayout({ children }) {
 
   // 🔒 Protege la ruta automáticamente
   useEffect(() => {
-    if (!loading && !isEmpresa) {
+    if (!loading && !user) {
       router.replace("/empresa-login");
     }
-  }, [loading, isEmpresa]);
+  }, [loading, user]);
 
   // ⏳ Mientras valida sesión
   if (loading) {

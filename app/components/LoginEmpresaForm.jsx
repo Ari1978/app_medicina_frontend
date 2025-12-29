@@ -1,10 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import { useAuth } from "@/app/hooks/useAuth"; 
+import { useAuth } from "@/app/hooks/useAuth";
 import { useRouter } from "next/navigation";
 
-import { Card, CardHeader, CardTitle, CardContent } from "@/app/components/ui/card";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+} from "@/app/components/ui/card";
 import { Input } from "@/app/components/ui/input";
 import { Label } from "@/app/components/ui/label";
 import { Button } from "@/app/components/ui/button";
@@ -15,7 +20,7 @@ export default function LoginEmpresaForm() {
 
   const [cuit, setCuit] = useState("");
   const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false); // 👁️ ojito
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -24,22 +29,32 @@ export default function LoginEmpresaForm() {
     setError("");
     setLoading(true);
 
-    const res = await login("empresa", { cuit, password });
+    let res;
 
-    // ❌ ERROR NORMAL
-    if (!res?.ok && !res?.mustChangePassword) {
+    try {
+      res = await login("empresa", { cuit, password });
+    } catch (err) {
+      setError("Error al iniciar sesión");
+      setLoading(false);
+      return;
+    }
+
+    // 🔴 CORTE DURO: si no hay respuesta válida
+    if (!res || (!res.ok && !res.mustChangePassword)) {
       setError(res?.message || "Error al iniciar sesión");
       setLoading(false);
       return;
     }
 
-    // ✅ PRIMER ACCESO → CAMBIO OBLIGATORIO
+    // ✅ CAMBIO DE PASSWORD OBLIGATORIO
     if (res.mustChangePassword) {
-      router.push(`/empresa-login/cambiar-password?empresaId=${res.empresaId}`);
+      router.push(
+        `/empresa-login/cambiar-password?empresaId=${res.empresaId}`
+      );
       return;
     }
 
-    // ✅ LOGIN NORMAL
+    // ✅ LOGIN OK
     router.push("/empresa/dashboard");
   };
 
@@ -54,7 +69,6 @@ export default function LoginEmpresaForm() {
 
         <CardContent>
           <form onSubmit={handleLogin} className="space-y-6">
-
             {/* CUIT */}
             <div className="space-y-2">
               <Label>CUIT</Label>
@@ -68,10 +82,9 @@ export default function LoginEmpresaForm() {
               />
             </div>
 
-            {/* CONTRASEÑA CON OJITO */}
+            {/* PASSWORD */}
             <div className="space-y-2">
               <Label>Contraseña</Label>
-
               <div className="relative">
                 <Input
                   type={showPassword ? "text" : "password"}
@@ -81,8 +94,6 @@ export default function LoginEmpresaForm() {
                   required
                   className="bg-white/80 backdrop-blur-sm pr-10"
                 />
-
-                {/* OJITO */}
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
@@ -110,7 +121,6 @@ export default function LoginEmpresaForm() {
             </Button>
           </form>
 
-          {/* ✅ MENSAJE SOPORTE */}
           <p className="text-center text-gray-500 text-sm mt-6">
             ¿Problemas para acceder? Contacte a soporte.
           </p>
@@ -119,3 +129,4 @@ export default function LoginEmpresaForm() {
     </div>
   );
 }
+

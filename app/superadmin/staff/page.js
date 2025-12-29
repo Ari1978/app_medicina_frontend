@@ -157,7 +157,7 @@ export default function StaffAdminPage() {
       .filter(Boolean);
 
     const res = await fetch(
-      `${API_URL}/api/superadmin/staff/${selected._id}/permisos`,
+      `${API_URL}/api/superadmin/staff/permisos/${selected._id}`,
       {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },

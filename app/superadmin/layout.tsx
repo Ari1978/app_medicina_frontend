@@ -57,6 +57,13 @@ function SuperAdminLayoutContent({ children }) {
             Staff
           </Link>
 
+          <Link
+            href="/superadmin/servicios-users"
+            className="hover:bg-gray-800 p-2 rounded"
+          >
+            Usuarios de Servicios
+          </Link>
+
           <Link href="/superadmin/geo" className="hover:bg-gray-800 p-2 rounded">
             Geolocalización
           </Link>

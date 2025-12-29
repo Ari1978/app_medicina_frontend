@@ -35,7 +35,7 @@
     "**/*.mts",
     "**/*.ts",
     "**/*.tsx"
-, "app/staff/marketing/layout.jsx"  ],
+, "app/staff/marketing/layout.jsx", "app/staff/turnos/[id]/practicas/page.js"  ],
   "exclude": [
     "node_modules"
   ]

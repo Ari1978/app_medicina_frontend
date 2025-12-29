@@ -6,11 +6,14 @@ if (!process.env.NEXT_PUBLIC_API_URL) {
 const API_URL = process.env.NEXT_PUBLIC_API_URL.replace(/\/$/, "");
 
 export async function getDisponibilidad(fecha) {
-  const url = `${API_URL}/api/empresa/disponibilidad?fecha=${encodeURIComponent(fecha)}`;
+  const url = `${API_URL}/api/empresa/disponibilidad?fecha=${encodeURIComponent(
+    fecha
+  )}`;
 
   const res = await fetch(url, {
     method: "GET",
-    credentials: "include", // ✅ SOLO COOKIE, SIN AUTH HEADER
+    credentials: "include", // ✅ cookie auth
+    cache: "no-store",      // 🔥 ESTO ES LO QUE FALTABA
     headers: {
       "Content-Type": "application/json",
     },

@@ -1,175 +1,203 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState, useRef } from "react";
+import { useParams } from "next/navigation";
+
+import HeaderTurno from "../../../components/HeaderTurno";
+import PracticaCard from "../../../components/PracticaCard";
+import PreInformeEditor from "../../../components/PreInformeEditor";
+import CerrarInformePanel from "../../../components/CerrarInformePanel";
+import TimelineAuditoria from "../../../components/TimelineAuditoria";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL.replace(/\/$/, "");
 
-export default function ResultadosStaff() {
-  const router = useRouter();
+export default function DetalleTurnoStaff() {
+  const params = useParams();
+  const turnoId = params.id;
 
-  // filtros
-  const [empresa, setEmpresa] = useState("");
-  const [dni, setDni] = useState("");
-  const [nombre, setNombre] = useState("");
-
-  // data
-  const [resultadosBase, setResultadosBase] = useState([]);
+  const [turno, setTurno] = useState(null);
+  const [adjuntos, setAdjuntos] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // =========================
-  // CARGA INICIAL (REALIZADOS)
-  // =========================
+  const token =
+    typeof window !== "undefined"
+      ? localStorage.getItem("tokenStaff")
+      : null;
+
+  const firstPendingRef = useRef(null);
+
+  // ============================
+  // CARGAR TURNO + ADJUNTOS
+  // ============================
   useEffect(() => {
-    const cargar = async () => {
+    if (!turnoId) return;
+
+    async function load() {
       try {
-        setLoading(true);
+        const [turnoRes, adjRes] = await Promise.all([
+          fetch(`${API_URL}/api/staff/turnos/${turnoId}`, {
+            credentials: "include",
+          }),
+          fetch(`${API_URL}/api/adjuntos/turno/${turnoId}`, {
+            credentials: "include",
+          }),
+        ]);
 
-        const res = await fetch(
-          `${API_URL}/api/staff/turnos/realizados`,
-          { credentials: "include" }
-        );
+        if (!turnoRes.ok) throw new Error("Error al cargar turno");
+        if (!adjRes.ok) throw new Error("Error al cargar adjuntos");
 
-        const data = await res.json();
-        setResultadosBase(Array.isArray(data) ? data : []);
+        const turnoData = await turnoRes.json();
+        const adjuntosData = await adjRes.json();
+
+        setTurno(turnoData);
+        setAdjuntos(adjuntosData);
       } catch (err) {
-        console.error("Error cargando resultados", err);
-        setResultadosBase([]);
+        console.error(err);
       } finally {
         setLoading(false);
       }
+    }
+
+    load();
+  }, [turnoId]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-gray-500">Cargando turno…</p>
+      </div>
+    );
+  }
+
+  if (!turno) {
+    return <p className="p-6">Turno no encontrado</p>;
+  }
+
+  // ============================
+  // ARMAR PRÁCTICAS + ESTADOS
+  // ============================
+  let pendingAssigned = false;
+
+  const practicas = (turno.listaEstudios || []).map((p) => {
+    const archivos = adjuntos.filter(
+      (a) => a.codigoPractica === p.codigo
+    );
+
+    let estado = "pendiente";
+    if (archivos.length > 0) {
+      estado = turno.informeCerrado ? "completa" : "evaluacion";
+    }
+
+    const isFirstPending =
+      estado === "pendiente" && !pendingAssigned;
+
+    if (isFirstPending) pendingAssigned = true;
+
+    return {
+      nombre: p.nombre,
+      codigo: p.codigo,
+      estado,
+      adjuntos: archivos,
+      isFirstPending,
     };
+  });
 
-    cargar();
-  }, []);
+  const pendientes = practicas.filter(
+    (p) => p.estado === "pendiente"
+  ).length;
 
-  // =========================
-  // FILTROS REALES
-  // =========================
-  const resultados = useMemo(() => {
-    return resultadosBase.filter(r => {
-      const matchEmpresa =
-        !empresa ||
-        r.empresa?.razonSocial
-          ?.toLowerCase()
-          .includes(empresa.toLowerCase());
+  const puedeCerrar =
+    pendientes === 0 &&
+    !turno.informeCerrado &&
+    Boolean(turno.adjuntoFinalId);
 
-      const matchNombre =
-        !nombre ||
-        `${r.empleadoApellido} ${r.empleadoNombre}`
-          .toLowerCase()
-          .includes(nombre.toLowerCase());
+  // ============================
+  // SCROLL A LA PRIMERA PENDIENTE
+  // ============================
+  useEffect(() => {
+    if (firstPendingRef.current) {
+      firstPendingRef.current.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+    }
+  }, [practicas]);
 
-      const matchDni =
-        !dni || r.empleadoDni?.includes(dni);
+  const estadoTurno = turno.informeCerrado
+    ? "finalizado"
+    : pendientes === 0
+    ? "evaluacion"
+    : "pendiente";
 
-      return matchEmpresa && matchNombre && matchDni;
-    });
-  }, [empresa, nombre, dni, resultadosBase]);
-
+  // ============================
+  // RENDER FINAL (2 COLUMNAS)
+  // ============================
   return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-bold">
-        Ver o editar Resultados
-      </h1>
-
-      {/* =========================
-          FILTROS
-      ========================= */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <input
-          className="border rounded-lg px-4 py-2"
-          placeholder="Empresa"
-          value={empresa}
-          onChange={e => setEmpresa(e.target.value)}
+    <main className="min-h-screen bg-gray-50 p-6">
+      <div className="max-w-7xl mx-auto space-y-6">
+        {/* HEADER */}
+        <HeaderTurno
+          postulante={`${turno.empleadoNombre} ${turno.empleadoApellido}`}
+          empresa={turno.empresaNombre || "Empresa"}
+          fecha={turno.fecha}
+          estado={estadoTurno}
         />
 
-        <input
-          className="border rounded-lg px-4 py-2"
-          placeholder="Nombre o apellido"
-          value={nombre}
-          onChange={e => setNombre(e.target.value)}
-        />
+        {/* GRID PRINCIPAL */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          {/* COLUMNA IZQUIERDA */}
+          <section className="lg:col-span-8 space-y-6">
+            {/* PRACTICAS */}
+            <div className="space-y-4">
+              {practicas.length === 0 && (
+                <p className="text-sm text-gray-500">
+                  No hay prácticas asociadas a este turno.
+                </p>
+              )}
 
-        <input
-          className="border rounded-lg px-4 py-2"
-          placeholder="DNI"
-          value={dni}
-          onChange={e => setDni(e.target.value)}
-        />
+              {practicas.map((p, i) => (
+                <div
+                  key={i}
+                  ref={p.isFirstPending ? firstPendingRef : null}
+                >
+                  <PracticaCard
+                    nombre={p.nombre}
+                    codigo={p.codigo}
+                    estado={p.estado}
+                    adjuntos={p.adjuntos}
+                    editable={!turno.informeCerrado}
+                    highlight={p.isFirstPending}
+                  />
+                </div>
+              ))}
+            </div>
+
+            {/* PRE-INFORME */}
+            {!turno.informeCerrado && (
+              <PreInformeEditor
+                turnoId={turnoId}
+                token={token}
+              />
+            )}
+
+            {/* CIERRE */}
+            {puedeCerrar && (
+              <CerrarInformePanel
+                adjuntoId={turno.adjuntoFinalId}
+                token={token}
+                onSuccess={() => window.location.reload()}
+              />
+            )}
+          </section>
+
+          {/* COLUMNA DERECHA */}
+          <aside className="lg:col-span-4">
+            <div className="sticky top-6">
+              <TimelineAuditoria turnoId={turnoId} />
+            </div>
+          </aside>
+        </div>
       </div>
-
-      {/* =========================
-          TABLA
-      ========================= */}
-      <div className="overflow-x-auto bg-white rounded-xl shadow border">
-        <table className="min-w-full text-sm">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-4 py-3 text-left">Apellido</th>
-              <th className="px-4 py-3 text-left">Nombre</th>
-              <th className="px-4 py-3 text-center">DNI</th>
-              <th className="px-4 py-3 text-center">Puesto</th>
-              <th className="px-4 py-3 text-left">Empresa</th>
-              <th className="px-4 py-3 text-center">Acción</th>
-            </tr>
-          </thead>
-
-          <tbody className="divide-y">
-            {!loading && resultados.map(r => (
-              <tr
-                key={r._id}
-                className="hover:bg-blue-50 transition"
-              >
-                <td className="px-4 py-2 font-semibold">
-                  {r.empleadoApellido}
-                </td>
-
-                <td className="px-4 py-2">
-                  {r.empleadoNombre}
-                </td>
-
-                <td className="px-4 py-2 text-center">
-                  {r.empleadoDni}
-                </td>
-
-                <td className="px-4 py-2 text-center">
-                  {r.puesto || "—"}
-                </td>
-
-                <td className="px-4 py-2">
-                  {r.empresa?.razonSocial || "—"}
-                </td>
-
-                <td className="px-4 py-2 text-center">
-                  <button
-                    onClick={() =>
-                      router.push(
-                        `/staff/examenes/resultados/editar/${r._id}`
-                      )
-                    }
-                    className="text-blue-600 hover:underline font-semibold"
-                  >
-                    Ver / Editar
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-
-        {!loading && resultados.length === 0 && (
-          <p className="text-center text-gray-500 p-6">
-            No se encontraron resultados.
-          </p>
-        )}
-
-        {loading && (
-          <p className="text-center text-gray-500 p-6">
-            Cargando resultados…
-          </p>
-        )}
-      </div>
-    </div>
+    </main>
   );
 }

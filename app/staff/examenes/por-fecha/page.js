@@ -8,20 +8,40 @@ if (!process.env.NEXT_PUBLIC_API_URL) {
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL.replace(/\/$/, "");
 
+function capitalizar(txt = "") {
+  return txt ? txt.charAt(0).toUpperCase() + txt.slice(1) : "—";
+}
+
 export default function TurnosPorFecha() {
   const [fecha, setFecha] = useState("");
   const [turnos, setTurnos] = useState([]);
   const [loading, setLoading] = useState(false);
 
+  const [catalogo, setCatalogo] = useState({});
   const [editandoId, setEditandoId] = useState(null);
-  const [estudiosEditados, setEstudiosEditados] = useState("");
+  const [practicasEditadas, setPracticasEditadas] = useState([]);
+  const [busqueda, setBusqueda] = useState("");
+
+  // =========================
+  // CARGAR CATÁLOGO
+  // =========================
+  useEffect(() => {
+    fetch(`${API_URL}/api/practicas/catalogo`)
+      .then((r) => r.json())
+      .then((data) => {
+        const map = {};
+        data.forEach((p) => {
+          map[p.codigo] = p.nombre;
+        });
+        setCatalogo(map);
+      });
+  }, []);
 
   // =========================
   // BUSCAR TURNOS
   // =========================
   const buscar = async (silencioso = false) => {
     if (!fecha) return;
-
     if (!silencioso) setLoading(true);
 
     try {
@@ -29,48 +49,35 @@ export default function TurnosPorFecha() {
         `${API_URL}/api/staff/examenes/por-fecha/${fecha}`,
         { credentials: "include" }
       );
-
-      if (!res.ok) throw new Error("Error al buscar turnos");
-
       const data = await res.json();
       setTurnos(Array.isArray(data) ? data : []);
-    } catch (err) {
-      console.error(err);
+    } catch {
       if (!silencioso) setTurnos([]);
     } finally {
       if (!silencioso) setLoading(false);
     }
   };
 
-  // =========================
-  // AUTO REFRESH
-  // =========================
   useEffect(() => {
     if (!fecha) return;
-
     buscar(true);
-
     const i = setInterval(() => buscar(true), 8000);
     return () => clearInterval(i);
   }, [fecha]);
 
   // =========================
-  // GUARDAR ESTUDIOS
-  // (mientras NO esté realizado)
+  // GUARDAR PRACTICAS
   // =========================
-  const guardarEstudios = async (id) => {
+  const guardarPracticas = async (id) => {
     try {
       const res = await fetch(
-        `${API_URL}/api/staff/turnos/${id}/estudios`,
+        `${API_URL}/api/staff/turnos/${id}/practicas`,
         {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           credentials: "include",
           body: JSON.stringify({
-            listaEstudios: estudiosEditados
-              .split(",")
-              .map(e => e.trim())
-              .filter(Boolean),
+            listaPracticas: practicasEditadas,
           }),
         }
       );
@@ -78,131 +85,165 @@ export default function TurnosPorFecha() {
       if (!res.ok) throw new Error();
 
       setEditandoId(null);
-      setEstudiosEditados("");
+      setPracticasEditadas([]);
+      setBusqueda("");
       buscar(true);
     } catch {
-      alert("No se pudieron actualizar los estudios");
+      alert("No se pudieron actualizar las prácticas");
     }
-  };
-
-  const badgeEstado = (estado) => {
-    if (estado === "provisional")
-      return "bg-yellow-100 text-yellow-700";
-    if (estado === "confirmado")
-      return "bg-green-100 text-green-700";
-    return "bg-gray-200 text-gray-600";
   };
 
   return (
     <div className="space-y-6">
-      {/* HEADER */}
-      <div>
-        <h2 className="text-2xl font-bold text-gray-800">
-          Turnos por Fecha
-        </h2>
-        <p className="text-sm text-gray-500">
-          Gestión de estudios (provisional y confirmado).
-        </p>
-      </div>
+      <h2 className="text-2xl font-bold">Turnos por Fecha</h2>
 
       {/* FILTRO */}
-      <div className="flex flex-wrap gap-3 items-center">
+      <div className="flex gap-3">
         <input
           type="date"
           value={fecha}
           onChange={(e) => setFecha(e.target.value)}
-          className="border rounded-lg px-4 py-2 shadow-sm"
+          className="border rounded px-3 py-2"
         />
-
         <button
           onClick={() => buscar(false)}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg shadow"
+          className="bg-blue-600 text-white px-4 py-2 rounded"
         >
           Buscar
         </button>
       </div>
 
       {/* TABLA */}
-      <div className="overflow-x-auto bg-white rounded-xl shadow border">
+      <div className="overflow-x-auto bg-white rounded shadow">
         <table className="min-w-full text-sm">
           <thead className="bg-gray-50 border-b">
-            <tr className="text-gray-600">
-              <th className="px-4 py-3 text-left">Hora</th>
-              <th className="px-4 py-3 text-left">Tipo</th>
-              <th className="px-4 py-3 text-left">Motivo</th>
-              <th className="px-4 py-3">Empleado</th>
-              <th className="px-4 py-3">DNI</th>
-              <th className="px-4 py-3">Puesto</th>
-              <th className="px-4 py-3 text-left">Estudios</th>
-              <th className="px-4 py-3">Empresa</th>
-              <th className="px-4 py-3">Estado</th>
-              <th className="px-4 py-3">Acción</th>
+            <tr>
+              <th className="px-4 py-2">Hora</th>
+              <th className="px-4 py-2">Empleado</th>
+              <th className="px-4 py-2">DNI</th>
+              <th className="px-4 py-2">Puesto</th>
+              <th className="px-4 py-2">Empresa</th>
+              <th className="px-4 py-2">Motivo</th>
+              <th className="px-4 py-2">Prácticas</th>
+              <th className="px-4 py-2">Estado</th>
             </tr>
           </thead>
 
-          <tbody className="divide-y">
-            {turnos.map(t => {
+          <tbody>
+            {turnos.map((t) => {
               const editable = t.estado !== "realizado";
 
               return (
-                <tr key={t._id} className="hover:bg-blue-50/40">
+                <tr key={t._id} className="border-t align-top">
                   <td className="px-4 py-2">{t.hora}</td>
-                  <td className="px-4 py-2 capitalize">{t.tipo}</td>
-                  <td className="px-4 py-2 capitalize">
-                    {t.motivo || "—"}
-                  </td>
 
-                  <td className="px-4 py-2 text-center">
+                  <td className="px-4 py-2">
                     {t.empleadoApellido} {t.empleadoNombre}
                   </td>
 
-                  <td className="px-4 py-2 text-center">
-                    {t.empleadoDni}
+                  <td className="px-4 py-2">{t.empleadoDni}</td>
+                  <td className="px-4 py-2">{t.puesto}</td>
+
+                  {/* EMPRESA */}
+                  <td className="px-4 py-2">
+                    {t.empresa?.razonSocial || "—"}
                   </td>
 
-                  <td className="px-4 py-2 text-center">
-                    {t.puesto || "—"}
+                  {/* MOTIVO */}
+                  <td className="px-4 py-2">
+                    {capitalizar(t.motivo)}
                   </td>
 
-                  {/* ESTUDIOS */}
+                  {/* PRACTICAS */}
                   <td className="px-4 py-2">
                     {editandoId === t._id ? (
-                      <div className="flex gap-2">
+                      <div className="space-y-2">
                         <input
-                          className="border rounded px-2 py-1 w-full"
-                          value={estudiosEditados}
-                          onChange={(e) =>
-                            setEstudiosEditados(e.target.value)
-                          }
-                          placeholder="RX, Espiro, Laboratorio"
+                          type="text"
+                          placeholder="Buscar práctica..."
+                          value={busqueda}
+                          onChange={(e) => setBusqueda(e.target.value)}
+                          className="w-full border rounded px-2 py-1 text-xs"
                         />
+
+                        {practicasEditadas.length > 0 && (
+                          <div className="flex flex-wrap gap-2">
+                            {practicasEditadas.map((codigo) => (
+                              <span
+                                key={codigo}
+                                className="flex items-center gap-1 bg-emerald-100 text-emerald-800 px-2 py-1 rounded text-xs"
+                              >
+                                {catalogo[codigo]} ({codigo})
+                                <button
+                                  onClick={() =>
+                                    setPracticasEditadas((prev) =>
+                                      prev.filter((c) => c !== codigo)
+                                    )
+                                  }
+                                >
+                                  ✕
+                                </button>
+                              </span>
+                            ))}
+                          </div>
+                        )}
+
+                        <div className="max-h-64 overflow-y-auto border rounded p-2 space-y-1">
+                          {Object.entries(catalogo)
+                            .filter(([codigo, nombre]) =>
+                              codigo.includes(busqueda) ||
+                              nombre
+                                .toLowerCase()
+                                .includes(busqueda.toLowerCase())
+                            )
+                            .map(([codigo, nombre]) => (
+                              <label
+                                key={codigo}
+                                className="flex items-center gap-2 text-xs hover:bg-slate-50 px-2 py-1 rounded"
+                              >
+                                <input
+                                  type="checkbox"
+                                  checked={practicasEditadas.includes(codigo)}
+                                  onChange={(e) => {
+                                    setPracticasEditadas((prev) =>
+                                      e.target.checked
+                                        ? [...prev, codigo]
+                                        : prev.filter((c) => c !== codigo)
+                                    );
+                                  }}
+                                />
+                                {nombre} ({codigo})
+                              </label>
+                            ))}
+                        </div>
+
                         <button
-                          onClick={() => guardarEstudios(t._id)}
-                          className="bg-green-600 hover:bg-green-700 text-white px-3 rounded"
+                          onClick={() => guardarPracticas(t._id)}
+                          className="bg-green-600 text-white px-3 py-1 rounded text-xs"
                         >
-                          ✓
+                          Guardar prácticas
                         </button>
                       </div>
                     ) : (
-                      <div className="flex items-center gap-2">
-                        <span className="truncate">
-                          {Array.isArray(t.listaEstudios) &&
-                          t.listaEstudios.length > 0
-                            ? t.listaEstudios.join(", ")
-                            : "—"}
-                        </span>
-
+                      <div className="flex gap-2 flex-wrap">
+                        {t.listaPracticas.map((p) => (
+                          <span
+                            key={p.codigo}
+                            className="px-2 py-1 bg-slate-100 rounded text-xs"
+                          >
+                            {catalogo[p.codigo]} ({p.codigo})
+                          </span>
+                        ))}
                         {editable && (
                           <button
                             onClick={() => {
                               setEditandoId(t._id);
-                              setEstudiosEditados(
-                                Array.isArray(t.listaEstudios)
-                                  ? t.listaEstudios.join(", ")
-                                  : ""
+                              setPracticasEditadas(
+                                t.listaPracticas.map((p) => p.codigo)
                               );
+                              setBusqueda("");
                             }}
-                            className="text-blue-600 hover:underline text-xs"
+                            className="text-blue-600 text-xs"
                           >
                             Editar
                           </button>
@@ -211,23 +252,7 @@ export default function TurnosPorFecha() {
                     )}
                   </td>
 
-                  <td className="px-4 py-2 text-center">
-                    {t.empresa?.razonSocial || "—"}
-                  </td>
-
-                  <td className="px-4 py-2 text-center">
-                    <span
-                      className={`px-3 py-1 rounded-full text-xs font-semibold ${badgeEstado(
-                        t.estado
-                      )}`}
-                    >
-                      {t.estado}
-                    </span>
-                  </td>
-
-                  <td className="px-4 py-2 text-center text-xs text-gray-500">
-                    {editable ? "Editable" : "Cerrado"}
-                  </td>
+                  <td className="px-4 py-2">{t.estado}</td>
                 </tr>
               );
             })}
@@ -235,15 +260,13 @@ export default function TurnosPorFecha() {
         </table>
 
         {!loading && turnos.length === 0 && fecha && (
-          <p className="text-center text-gray-500 p-6">
-            No hay turnos para esa fecha.
+          <p className="p-4 text-center text-gray-500">
+            No hay turnos para esa fecha
           </p>
         )}
 
         {loading && (
-          <p className="text-center text-gray-500 p-6">
-            Cargando...
-          </p>
+          <p className="p-4 text-center text-gray-500">Cargando...</p>
         )}
       </div>
     </div>

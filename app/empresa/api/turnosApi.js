@@ -1,47 +1,69 @@
-// ✅ SOLO PRODUCCIÓN / FLY (sin fallback a localhost)
+// ✅ SOLO PRODUCCIÓN / FLY
 if (!process.env.NEXT_PUBLIC_API_URL) {
   throw new Error("Falta NEXT_PUBLIC_API_URL en el entorno");
 }
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL.replace(/\/$/, "");
 
+// 🔐 auth por cookie (NO token manual)
+export async function crearTurno(data) {
+  if (!data?.tipo) {
+    throw new Error("Payload inválido: falta tipo");
+  }
 
-export async function crearTurno(token, data) {
-  // ✅ Construimos el payload limpio según el tipo
+  // =========================
+  // NORMALIZAR ESTUDIOS
+  // =========================
+  const listaEstudiosNormalizada = (data.listaEstudios ?? []).map((e) => {
+    // si viene como string
+    if (typeof e === "string") {
+      return { codigo: e, estado: "pendiente" };
+    }
+
+    // si viene como objeto correcto
+    return {
+      codigo: e.codigo,
+      estado: e.estado ?? "pendiente",
+    };
+  });
+
+  // =========================
+  // PAYLOAD LIMPIO FINAL
+  // =========================
   const payload = {
     tipo: data.tipo,
+
     empleadoNombre: data.empleadoNombre,
     empleadoApellido: data.empleadoApellido,
     empleadoDni: data.empleadoDni,
     puesto: data.puesto,
+
     fecha: data.fecha,
     hora: data.hora,
+
     solicitanteNombre: data.solicitanteNombre,
     solicitanteApellido: data.solicitanteApellido,
     solicitanteCelular: data.solicitanteCelular,
+
+    motivo: data.motivo,
+
+    // 🔑 SIEMPRE NORMALIZADO
+    listaPracticas: listaEstudiosNormalizada,
   };
 
-  // ✅ SOLO SI ES EXAMEN
+  // =========================
+  // EXAMEN
+  // =========================
   if (data.tipo === "examen") {
-    payload.motivo = data.motivo; // ingreso | egreso | periodico
-    payload.perfilExamen = data.perfilExamen;
-    payload.estudiosAdicionales = data.estudiosAdicionales ?? [];
-    payload.listaEstudios = data.listaEstudios ?? [];
-  }
-
-  // ✅ SOLO SI ES ESTUDIO
-  if (data.tipo === "estudios") {
-    payload.motivo = data.motivo; // complementario | pendiente | otro
-    payload.listaEstudios = data.listaEstudios; // obligatorio
+    payload.perfilExamen = data.perfilExamen || null;
   }
 
   const res = await fetch(`${API_URL}/api/empresa/turnos`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: token ? `Bearer ${token}` : undefined, // ✅ JWT opcional
     },
-    credentials: "include", // ✅ cookies en local y producción
+    credentials: "include",
     body: JSON.stringify(payload),
   });
 

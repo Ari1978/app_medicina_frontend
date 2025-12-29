@@ -16,29 +16,27 @@ export function AuthProvider({ children }) {
   const [role, setRole] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // ✅ SESIÓN AUTOMÁTICA POR CONTEXTO
+  // =========================
+  // SESIÓN AUTOMÁTICA
+  // =========================
   useEffect(() => {
     if (typeof window === "undefined") return;
 
     const checkSession = async () => {
       try {
         const pathname = window.location.pathname;
-
         let endpoint = null;
-        let detectedRole = null;
 
         if (pathname.startsWith("/empresa")) {
           endpoint = `${API_URL}/api/empresa/me`;
-          detectedRole = "empresa";
         } else if (pathname.startsWith("/staff")) {
           endpoint = `${API_URL}/api/staff/auth/me`;
-          detectedRole = "staff";
+        } else if (pathname.startsWith("/servicios")) {
+          endpoint = `${API_URL}/api/servicios/auth/me`;
         } else if (pathname.startsWith("/admin")) {
           endpoint = `${API_URL}/api/admin/me`;
-          detectedRole = "admin";
         } else if (pathname.startsWith("/superadmin")) {
           endpoint = `${API_URL}/api/superadmin/me`;
-          detectedRole = "superadmin";
         }
 
         if (!endpoint) {
@@ -47,16 +45,27 @@ export function AuthProvider({ children }) {
           return;
         }
 
-        const res = await fetch(endpoint, { credentials: "include" });
+        const res = await fetch(endpoint, {
+          credentials: "include",
+          cache: "no-store",
+        });
 
-        if (res.ok) {
-          const data = await res.json();
-          setUser(data);
-          setRole(detectedRole);
-        } else {
+        
+
+        // ❌ SESIÓN INVÁLIDA
+        if (!res.ok) {
           setUser(null);
           setRole(null);
+          return;
         }
+
+        const data = await res.json();
+
+        setUser(data);
+        setRole(data.role); // 🔑 VIENE DEL BACKEND
+      } catch (err) {
+        setUser(null);
+        setRole(null);
       } finally {
         setLoading(false);
       }
@@ -65,17 +74,20 @@ export function AuthProvider({ children }) {
     checkSession();
   }, []);
 
-  // ✅ LOGIN
-  const login = async (role, credentials) => {
+  // =========================
+  // LOGIN
+  // =========================
+  const login = async (loginRole, credentials) => {
     const urls = {
       empresa: `${API_URL}/api/empresa/login`,
       staff: `${API_URL}/api/staff/auth/login`,
+      servicios: `${API_URL}/api/servicios/auth/login`,
       admin: `${API_URL}/api/admin/login`,
       superadmin: `${API_URL}/api/superadmin/login`,
     };
 
     try {
-      const res = await fetch(urls[role], {
+      const res = await fetch(urls[loginRole], {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -93,8 +105,10 @@ export function AuthProvider({ children }) {
         };
       }
 
-      setUser(data.user ?? data.staff ?? data.empresa ?? data);
-      setRole(role);
+      const loggedUser = data.user ?? data.staff ?? data.empresa ?? data;
+
+      setUser(loggedUser);
+      setRole(loginRole);
 
       return { ok: true };
     } catch (err) {
@@ -102,24 +116,35 @@ export function AuthProvider({ children }) {
     }
   };
 
-  // ✅ LOGOUT
+  // =========================
+  // LOGOUT
+  // =========================
   const logout = async () => {
     const urls = {
       empresa: `${API_URL}/api/empresa/logout`,
       staff: `${API_URL}/api/staff/auth/logout`,
+      servicios: `${API_URL}/api/servicios/auth/logout`,
       admin: `${API_URL}/api/admin/logout`,
       superadmin: `${API_URL}/api/superadmin/logout`,
     };
 
     try {
-      if (role) {
-        await fetch(urls[role], { method: "POST", credentials: "include" });
+      if (role && urls[role]) {
+        await fetch(urls[role], {
+          method: "POST",
+          credentials: "include",
+        });
       }
     } catch (_) {}
 
     setUser(null);
     setRole(null);
   };
+
+  // =========================
+  // HELPERS
+  // =========================
+  const hasPermiso = (permiso) => user?.permisos?.includes(permiso);
 
   return (
     <AuthContext.Provider
@@ -129,10 +154,17 @@ export function AuthProvider({ children }) {
         loading,
         login,
         logout,
+
+        // roles
         isEmpresa: role === "empresa",
         isStaff: role === "staff",
+        isServicio: role === "servicios",
+        isMedico: role === "medico",
         isAdmin: role === "admin",
         isSuperAdmin: role === "superadmin",
+
+        // permisos
+        hasPermiso,
       }}
     >
       {children}
@@ -140,7 +172,9 @@ export function AuthProvider({ children }) {
   );
 }
 
-// ✅ HOOK
+// =========================
+// HOOK
+// =========================
 export function useAuth() {
   const ctx = useContext(AuthContext);
   if (!ctx) {

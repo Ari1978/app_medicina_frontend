@@ -32,15 +32,24 @@ export default function StaffSidebar() {
             <p className="font-semibold text-blue-400">🧾 Recepción</p>
 
             <div className="ml-4 space-y-1 text-sm">
-              <Link href="/staff/recepcion/turnos-hoy" className="block hover:text-blue-300">
+              <Link
+                href="/staff/recepcion/turnos-hoy"
+                className="block hover:text-blue-300"
+              >
                 🗓️ Turnos del Día
               </Link>
 
-              <Link href="/staff/recepcion/pacientes" className="block hover:text-blue-300">
+              <Link
+                href="/staff/recepcion/pacientes"
+                className="block hover:text-blue-300"
+              >
                 👤 Pacientes
               </Link>
 
-              <Link href="/staff/recepcion/buscar" className="block hover:text-blue-300">
+              <Link
+                href="/staff/recepcion/buscar"
+                className="block hover:text-blue-300"
+              >
                 🔍 Búsqueda Rápida
               </Link>
             </div>
@@ -53,7 +62,10 @@ export default function StaffSidebar() {
             <p className="font-semibold text-emerald-400">🧬 Exámenes</p>
 
             <div className="ml-4 space-y-1 text-sm">
-              <Link href="/staff/examenes/por-fecha" className="block hover:text-emerald-300">
+              <Link
+                href="/staff/examenes/por-fecha"
+                className="block hover:text-emerald-300"
+              >
                 🗓️ Turnos por fecha
               </Link>
 
@@ -65,7 +77,7 @@ export default function StaffSidebar() {
               </Link>
 
               <Link
-                href="/staff/turnos/id"
+                href="/staff/examenes/resultados"
                 className="block hover:text-emerald-300"
               >
                 📝 Editar Resultados
@@ -77,6 +89,14 @@ export default function StaffSidebar() {
               >
                 🧬 Perfiles de Exámenes
               </Link>
+
+              {/* ✅ NUEVO – entrada al flujo que termina en /staff/turnos/:id */}
+              <Link
+                href="/staff/examenes/evaluacion-medica"
+                className="block hover:text-emerald-300"
+              >
+                🧾 Evaluación médica
+              </Link>
             </div>
           </div>
         )}
@@ -84,14 +104,22 @@ export default function StaffSidebar() {
         {/* ✅ TURNOS ESPECIALES */}
         {permisos.includes("turnos") && (
           <div className="space-y-2">
-            <p className="font-semibold text-violet-400">🚑 Turnos Especiales</p>
+            <p className="font-semibold text-violet-400">
+              🚑 Turnos Especiales
+            </p>
 
             <div className="ml-4 space-y-1 text-sm">
-              <Link href="/staff/turnos/especiales" className="block hover:text-violet-300">
+              <Link
+                href="/staff/turnos/especiales"
+                className="block hover:text-violet-300"
+              >
                 Especiales
               </Link>
 
-              <Link href="/staff/turnos/domicilios" className="block hover:text-violet-300">
+              <Link
+                href="/staff/turnos/domicilios"
+                className="block hover:text-violet-300"
+              >
                 Domicilios
               </Link>
             </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 // ✅ SOLO PRODUCCIÓN / FLY
 if (!process.env.NEXT_PUBLIC_API_URL) {
@@ -27,24 +28,8 @@ function humanizarMotivo(turno) {
     periodico: "Periódico",
   };
 
-  const mapEstudio = {
-    pendiente: "Pendiente",
-    complementario: "Complementario",
-    otro: "Otro",
-  };
-
   if (tipo === "examen") return mapExamen[motivo] || capitalizar(motivo);
-  if (tipo === "estudio") return mapEstudio[motivo] || capitalizar(motivo);
-
   return capitalizar(motivo);
-}
-
-function obtenerEstudios(turno) {
-  const base = Array.isArray(turno.listaEstudios) ? turno.listaEstudios : [];
-  const adicionales = Array.isArray(turno.estudiosAdicionales)
-    ? turno.estudiosAdicionales
-    : [];
-  return [...base, ...adicionales];
 }
 
 function hoyISO() {
@@ -57,7 +42,35 @@ function hoyISO() {
 export default function TurnosPorDia() {
   const [fecha, setFecha] = useState(hoyISO());
   const [turnos, setTurnos] = useState([]);
+  const [catalogo, setCatalogo] = useState([]);
   const [loading, setLoading] = useState(false);
+
+  // =============================
+  // CARGAR CATÁLOGO DE PRÁCTICAS
+  // =============================
+  useEffect(() => {
+    fetch(`${API_URL}/api/practicas/catalogo`, {
+      credentials: "include",
+    })
+      .then((res) => res.json())
+      .then((data) => setCatalogo(Array.isArray(data) ? data : []))
+      .catch(() => setCatalogo([]));
+  }, []);
+
+  const nombrePractica = (codigo) => {
+    const p = catalogo.find((x) => String(x.codigo) === String(codigo));
+    return p ? p.nombre : `Código ${codigo}`;
+  };
+
+  const obtenerPracticas = (turno) => {
+    const practicas = Array.isArray(turno.listaPracticas)
+      ? turno.listaPracticas
+      : [];
+
+    return practicas.map(
+      (p) => `${nombrePractica(p.codigo)} (${p.codigo})`
+    );
+  };
 
   // =============================
   // CARGAR TURNOS POR FECHA
@@ -68,14 +81,27 @@ export default function TurnosPorDia() {
         setLoading(true);
 
         const res = await fetch(
-          `${API_URL}/api/recepcion/turnos?fecha=${fecha}`,
-          { credentials: "include" }
+          `${API_URL}/api/staff/recepcion/turnos?fecha=${fecha}`,
+          { credentials: "include", cache: "no-store" }
         );
 
         if (!res.ok) throw new Error("Error cargando turnos");
 
         const data = await res.json();
-        setTurnos(Array.isArray(data) ? data : []);
+
+        // ✅ FIX: soporta cualquier wrapper del backend
+        const lista =
+          Array.isArray(data)
+            ? data
+            : Array.isArray(data?.turnos)
+            ? data.turnos
+            : Array.isArray(data?.items)
+            ? data.items
+            : Array.isArray(data?.data)
+            ? data.data
+            : [];
+
+        setTurnos(lista);
       } catch (err) {
         console.error("Error cargando turnos:", err);
         setTurnos([]);
@@ -93,7 +119,7 @@ export default function TurnosPorDia() {
   const cambiarEstado = async (id, estado) => {
     try {
       const res = await fetch(
-        `${API_URL}/api/recepcion/turnos/${id}/estado`,
+        `${API_URL}/api/staff/recepcion/turnos/${id}/estado`,
         {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
@@ -113,9 +139,11 @@ export default function TurnosPorDia() {
     }
   };
 
+  const router = useRouter();
+
   const imprimirTurno = (turno) => {
-    console.log("Imprimir turno:", turno._id);
-    alert(`(Demo) Imprimir ficha de ${turno.empleadoApellido}`);
+    const url = `${API_URL}/api/staff/recepcion/turnos/${turno._id}/pdf`;
+    window.open(url, "_blank");
   };
 
   // =============================
@@ -123,18 +151,14 @@ export default function TurnosPorDia() {
   // =============================
   return (
     <div className="space-y-4">
-      {/* HEADER */}
       <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-2">
         <div>
-          <h2 className="text-2xl font-bold text-gray-800">
-            Turnos por Día
-          </h2>
+          <h2 className="text-2xl font-bold text-gray-800">Turnos por Día</h2>
           <p className="text-gray-500 text-sm">
-            Recepción, control de llegadas y estudios.
+            Recepción y control de prácticas.
           </p>
         </div>
 
-        {/* SELECT FECHA */}
         <input
           type="date"
           value={fecha}
@@ -143,8 +167,7 @@ export default function TurnosPorDia() {
         />
       </div>
 
-      {/* TABLA */}
-      <div className="overflow-x-auto bg-white rounded-2xl shadow border border-gray-100">
+      <div className="overflow-x-auto bg-white rounded-2xl shadow border">
         <table className="min-w-full text-sm">
           <thead>
             <tr className="bg-slate-50 border-b">
@@ -153,7 +176,7 @@ export default function TurnosPorDia() {
               <th className="px-4 py-3 text-left">DNI</th>
               <th className="px-4 py-3 text-left">Empresa</th>
               <th className="px-4 py-3 text-left">Motivo</th>
-              <th className="px-4 py-3 text-left">Estudios</th>
+              <th className="px-4 py-3 text-left">Prácticas</th>
               <th className="px-4 py-3 text-left">Estado</th>
               <th className="px-4 py-3 text-center">Acción</th>
             </tr>
@@ -161,7 +184,7 @@ export default function TurnosPorDia() {
 
           <tbody>
             {turnos.map((t, idx) => {
-              const estudios = obtenerEstudios(t);
+              const practicas = obtenerPracticas(t);
               const puedeImprimir = t.estado === "confirmado";
               const bloqueado = t.estado === "realizado";
 
@@ -188,12 +211,12 @@ export default function TurnosPorDia() {
                     {t.empresa?.razonSocial || "—"}
                   </td>
 
-                  <td className="px-4 py-3">
-                    {humanizarMotivo(t)}
-                  </td>
+                  <td className="px-4 py-3">{humanizarMotivo(t)}</td>
 
                   <td className="px-4 py-3">
-                    {estudios.length === 0 ? "—" : estudios.join(", ")}
+                    {practicas.length === 0
+                      ? "—"
+                      : practicas.join(", ")}
                   </td>
 
                   <td className="px-4 py-3">
@@ -220,7 +243,11 @@ export default function TurnosPorDia() {
                     </button>
 
                     <button
-                      onClick={() => imprimirTurno(t)}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        imprimirTurno(t);
+                      }}
                       disabled={bloqueado || !puedeImprimir}
                       className="px-2 py-1 text-xs border rounded disabled:opacity-40"
                     >
@@ -240,9 +267,7 @@ export default function TurnosPorDia() {
         )}
 
         {loading && (
-          <p className="p-4 text-center text-gray-500">
-            Cargando...
-          </p>
+          <p className="p-4 text-center text-gray-500">Cargando...</p>
         )}
       </div>
     </div>
