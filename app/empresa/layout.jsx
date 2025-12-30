@@ -10,12 +10,16 @@ export default function EmpresaLayout({ children }) {
   const { user, loading, isEmpresa } = useAuth();
   const router = useRouter();
 
-  // 🔒 Protege la ruta automáticamente
+  // 🔒 Protección CORRECTA de rutas empresa
   useEffect(() => {
-    if (!loading && !user) {
+    // ⛔ Mientras carga, NO redirigir
+    if (loading) return;
+
+    // ❌ Si terminó de cargar y NO es empresa → afuera
+    if (!isEmpresa) {
       router.replace("/empresa-login");
     }
-  }, [loading, user]);
+  }, [loading, isEmpresa, router]);
 
   // ⏳ Mientras valida sesión
   if (loading) {
@@ -28,13 +32,12 @@ export default function EmpresaLayout({ children }) {
     );
   }
 
-  // ❌ Si no es empresa (redirecciona arriba, pero evita errores de render)
+  // ❌ Si no es empresa, no renderiza nada (el redirect ya se disparó)
   if (!isEmpresa) return null;
 
   return (
     <TurnoProvider>
       <main className="bg-linear-to-br from-blue-50 to-blue-100 h-screen overflow-y-auto p-4 sm:p-6">
-
         {/* 🧾 Resumen sólo si hay empresa */}
         {user && (
           <div className="max-w-6xl mx-auto mb-6">
