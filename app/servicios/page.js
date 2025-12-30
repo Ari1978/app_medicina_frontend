@@ -1,6 +1,6 @@
-import AreasPermitidas from "./components/AreasPermitidas";
-import ServicioCard from "./components/ServicioCard";
-import ServicioArchivos from "./components/ServicioArchivos";
+import AreasPermitidas from "../components/AreasPermitidas";
+import ServicioCard from "../components/ServicioCard";
+import ServicioArchivos from "../components/ServicioArchivos";
 
 export default function ServiciosHome() {
   return (

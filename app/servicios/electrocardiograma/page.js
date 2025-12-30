@@ -1,6 +1,6 @@
 "use client";
 
-import UploadArchivo from "@/app/servicios/components/UploadArchivo";
+import UploadArchivo from "@/app/components/UploadArchivo";
 
 export default function ElectrocardiogramaPage() {
   return (

@@ -1,8 +1,8 @@
 "use client";
 
-import HeaderTurno from "@/components/HeaderTurno";
-import EstadoPracticasBar from "@/components/EstadoPracticasBar";
-import PracticaCard from "@/components/PracticaCard";
+import HeaderTurno from "../../../../components/HeaderTurno";
+import EstadoPracticasBar from "../../../../components/EstadoPracticasBar";
+import PracticaCard from "../../../../components/PracticaCard";
 
 export default function Page() {
   // MOCK por ahora (después lo conectamos al back)

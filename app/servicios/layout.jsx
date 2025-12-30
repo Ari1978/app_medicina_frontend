@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { AuthProvider, useAuth } from "@/app/context/AuthContext";
-import ServicioSidebar from "./components/ServiciosSidebar";
+import ServicioSidebar from "../components/ServiciosSidebar";
 
 function ServiciosLayoutContent({ children }) {
   const { loading, role } = useAuth();

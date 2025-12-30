@@ -3,9 +3,9 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 
-import HeaderTurno from "@/components/HeaderTurno";
-import PracticaCard from "@/components/PracticaCard";
-import TimelineAuditoria from "@/components/TimelineAuditoria";
+import HeaderTurno from "../../../components/HeaderTurno";
+import PracticaCard from "../../../components/PracticaCard";
+import TimelineAuditoria from "../../../components/TimelineAuditoria";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL.replace(/\/$/, "");
 

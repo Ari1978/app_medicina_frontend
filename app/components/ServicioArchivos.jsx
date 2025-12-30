@@ -6,7 +6,7 @@ import {
   descargarArchivoServicio,
   eliminarArchivoServicio,
   getPreviewUrl,
-} from "../api/serviciosArchivosApi";
+} from "../servicios/api/serviciosArchivosApi";
 
 export default function ServicioArchivos({ servicioId }) {
   const [archivos, setArchivos] = useState([]);
